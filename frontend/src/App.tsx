@@ -1,35 +1,61 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { Suspense, lazy } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import ProtectedRoute from "./ProtectedRoute";
+import DashboardLayout from "./layout/DashboardLayout";
+import { adminRoutes } from "./features/admin/routes";
+import { chapterRoutes } from "./features/chapterleader/routes";
+import { ROLES } from "./utils/constants";
 
-function App() {
-  const [count, setCount] = useState(0)
+// Lazy load login
+const Login = lazy(() => import("./features/auth/Login"));
 
+const App: React.FC = () => {
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <Suspense fallback={<div>Loading Application...</div>}>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/login" element={<Login />} />
 
-export default App
+        {/* Private Routes */}
+        <Route element={<ProtectedRoute />}>
+          <Route element={<DashboardLayout />}>
+            {/* Admin Routes */}
+            <Route
+              path="admin"
+              element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]} />}
+            >
+              <Route index element={<Navigate to="home" replace />} />
+              {adminRoutes.map((route) => (
+                <Route
+                  key={route.path}
+                  path={route.path}
+                  element={<route.component />}
+                />
+              ))}
+            </Route>
+
+            {/* Chapter Routes */}
+            <Route
+              path="chapterleader"
+              element={<ProtectedRoute allowedRoles={[ROLES.CHAPTER]} />}
+            >
+              <Route index element={<Navigate to="club" replace />} />
+              {chapterRoutes.map((route) => (
+                <Route
+                  key={route.path}
+                  path={route.path}
+                  element={<route.component />}
+                />
+              ))}
+            </Route>
+          </Route>
+        </Route>
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </Suspense>
+  );
+};
+
+export default App;

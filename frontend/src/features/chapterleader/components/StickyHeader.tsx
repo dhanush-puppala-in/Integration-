@@ -1,0 +1,79 @@
+import React from "react";
+import { IoIosRocket } from "react-icons/io";
+
+interface StickyHeaderProps {
+  currentStage: {
+    title: string;
+    theme: {
+      bg: string;
+      active: string;
+    };
+  };
+  label: string;
+}
+
+const StickyHeader: React.FC<StickyHeaderProps> = ({ currentStage, label }) => {
+  return (
+    <div className="sticky top-[86px] md:top-0 z-[1000] w-full flex flex-col items-center pt-2 md:pt-6 px-4 pb-4 backdrop-blur-xl transition-all duration-700 border-b border-white/5 shadow-2xl">
+      <header className="flex flex-row items-center justify-between w-full lg:max-w-[1000px] p-4 px-6 md:px-10 bg-[#0c121d] border border-white/10 rounded-[2rem] shadow-2xl relative overflow-hidden group">
+        {/* Left: Branding & Rocket Switcher */}
+        <div className="flex items-center gap-4 relative z-10 transition-all duration-500">
+          <div
+            className="w-11 h-11 rounded-2xl flex items-center justify-center border transition-all duration-700 shadow-lg"
+            style={{
+              backgroundColor: currentStage.theme.bg,
+              borderColor: `${currentStage.theme.active}40`,
+              boxShadow: `0 0 20px ${currentStage.theme.active}20`,
+            }}
+          >
+            <IoIosRocket
+              className="text-2xl transition-all duration-700"
+              style={{ color: currentStage.theme.active }}
+            />
+          </div>
+          <div>
+            <p className="text-[10px] font-black text-gray-500 tracking-[0.3em] uppercase mb-0.5">
+              {label}
+            </p>
+            <h1 className="text-lg font-black uppercase tracking-tighter text-white">
+              {currentStage.title}
+            </h1>
+          </div>
+        </div>
+
+        {/* Right: Toggle Mode System */}
+        <div className="flex items-center gap-6 relative z-10">
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest hidden sm:block">
+              Explore Mode
+            </span>
+            <div
+              className="w-12 h-6.5 rounded-full p-1 flex items-center transition-all duration-700 cursor-pointer"
+              style={{
+                backgroundColor: currentStage.theme.bg,
+                border: `1px solid ${currentStage.theme.active}30`,
+              }}
+            >
+              <div
+                className="w-4.5 h-4.5 bg-white rounded-full shadow-lg transition-all duration-500"
+                style={{
+                  transform: "translateX(0px)",
+                  boxShadow: `0 0 10px ${currentStage.theme.active}`,
+                }}
+              />
+            </div>
+          </div>
+          {/* Avatar */}
+          <div className="w-10 h-10 rounded-xl border border-white/10 overflow-hidden shadow-inner">
+            <img
+              src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"
+              alt="User"
+            />
+          </div>
+        </div>
+      </header>
+    </div>
+  );
+};
+
+export default StickyHeader;
