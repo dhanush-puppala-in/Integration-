@@ -112,6 +112,8 @@ interface Quest {
   badge?: string;
   progress: number;
   total: number;
+  isCompleted?: boolean;
+  isRewardClaimed?: boolean;
   icon: React.ReactNode;
   lottieData?: any;
 }
@@ -127,320 +129,96 @@ interface Stage {
   };
 }
 
-const STAGES: Stage[] = [
-  {
-    title: "Foundation Orbit",
-    objective: "Establishing the first nodes of gravity on campus.",
-    theme: {
-      stroke: "#22c55e",
-      active: "#4ade80",
-      bg: "rgba(34, 197, 94, 0.2)",
-    },
-    quests: [
-      {
-        id: "c1q1",
-        name: "Spark Ignition",
-        task: "Get 1 club to 50 members.",
-        reward: "+200 IP",
-        progress: 50,
-        total: 50,
-        icon: <IoMdFlame />,
-        lottieData: rotatingPlanetLottie,
-      },
-      {
-        id: "c1q2",
-        name: "Century Club",
-        task: "Get 1 club to 100 members.",
-        reward: "+400 IP",
-        progress: 82,
-        total: 100,
-        icon: <FaMedal />,
-        lottieData: earthLottie,
-      },
-      {
-        id: "c1q3",
-        name: "First Active Club",
-        task: "1 club meets ACTIVE criteria (50+ members, 3 posts/week, 10 interactions/week).",
-        reward: "+500 IP",
-        progress: 0,
-        total: 1,
-        icon: <FaChartLine />,
-        lottieData: planetOrbitLottie,
-      },
-      {
-        id: "c1q4",
-        name: "Triple Foundation",
-        task: "3 clubs reach 50 members each.",
-        reward: "+600 IP",
-        progress: 1,
-        total: 3,
-        icon: <FaUsers />,
-        lottieData: planetStarsLottie,
-      },
-    ],
-  },
-  {
-    title: "Growth Orbit",
-    objective: "Expanding the campus footprint and local density.",
-    theme: {
-      stroke: "#3b82f6",
-      active: "#60a5fa",
-      bg: "rgba(59, 130, 246, 0.2)",
-    },
-    quests: [
-      {
-        id: "c2q1",
-        name: "Power 5",
-        task: "5 clubs reach 100 members each.",
-        reward: "+1000 IP",
-        progress: 1,
-        total: 5,
-        icon: <FaUsers />,
-        lottieData: planetLoaderLottie,
-      },
-      {
-        id: "c2q2",
-        name: "Strong Network",
-        task: "10 clubs with 50+ members each.",
-        reward: "+1500 IP",
-        progress: 3,
-        total: 10,
-        icon: <FaProjectDiagram />,
-        lottieData: redPlanetLottie,
-      },
-      {
-        id: "c2q3",
-        name: "Elite 10",
-        task: "10 clubs reach 100+ members each.",
-        reward: "+3000 IP",
-        progress: 0,
-        total: 10,
-        icon: <FaCrown />,
-        lottieData: rotatingPlanetLottie,
-      },
-      {
-        id: "c2q4",
-        name: "Member Milestone",
-        task: "Reach 1,000 total club members across the university.",
-        reward: "+2000 IP",
-        progress: 420,
-        total: 1000,
-        icon: <GiGalaxy />,
-      },
-      {
-        id: "c2q5",
-        name: "Massive Expansion",
-        task: "20 active clubs onboarded and verified.",
-        reward: "+4000 IP",
-        progress: 8,
-        total: 20,
-        icon: <FaGlobeAmericas />,
-      },
-    ],
-  },
-  {
-    title: "Engagement Orbit",
-    objective:
-      "Generating the 'Atmosphere' through active, consistent discussion.",
-    theme: {
-      stroke: "#a855f7",
-      active: "#c084fc",
-      bg: "rgba(168, 85, 247, 0.2)",
-    },
-    quests: [
-      {
-        id: "c3q1",
-        name: "Engagement Starter",
-        task: "At least 50 total weekly posts across all clubs.",
-        reward: "+800 IP",
-        progress: 12,
-        total: 50,
-        icon: <FaComments />,
-      },
-      {
-        id: "c3q2",
-        name: "Interaction Boost",
-        task: "200 weekly interactions (likes/comments) across all clubs.",
-        reward: "+1200 IP",
-        progress: 45,
-        total: 200,
-        icon: <FaChartLine />,
-      },
-      {
-        id: "c3q3",
-        name: "Retention Master",
-        task: "Maintain 70% of members active weekly.",
-        reward: "+2000 IP",
-        progress: 55,
-        total: 70,
-        icon: <FaUsers />,
-      },
-      {
-        id: "c3q4",
-        name: "Weekly Momentum",
-        task: "Meet engagement targets for 3 consecutive weeks.",
-        reward: "+1500 IP",
-        progress: 0,
-        total: 3,
-        icon: <FaChartLine />,
-      },
-    ],
-  },
-  {
-    title: "The Multiverse Orbit",
-    objective:
-      "Dissolve local boundaries by importing global intelligence and exporting campus influence.",
-    theme: {
-      stroke: "#f97316",
-      active: "#fb923c",
-      bg: "rgba(249, 115, 22, 0.2)",
-    },
-    quests: [
-      {
-        id: "c4q1",
-        name: "The Rift Opening",
-        task: "Host 1 joint project with a club from a different University Galaxy.",
-        reward: "+1,500 IP",
-        badge: "Dimensional Traveler",
-        progress: 0,
-        total: 1,
-        icon: <FaProjectDiagram />,
-      },
-      {
-        id: "c4q2",
-        name: "Multiverse Mesh",
-        task: "Establish active partnerships with 3 different universities.",
-        reward: "+3,000 IP",
-        badge: "Multiverse Architect",
-        progress: 0,
-        total: 3,
-        icon: <FaGlobeAmericas />,
-      },
-      {
-        id: "c4q3",
-        name: "Alien Arrival",
-        task: "Onboard 1 Foreign University Student/Faculty as a Club Mentor.",
-        reward: "+3,500 IP",
-        badge: "Interstellar Host",
-        progress: 0,
-        total: 1,
-        icon: <FaUserTie />,
-      },
-      {
-        id: "c4q4",
-        name: "Multiverse Citizen",
-        task: "Ensure 10% of total club members are 'Migrants' from external/international unis.",
-        reward: "+4,500 IP",
-        badge: "Galaxy Citizen",
-        progress: 2,
-        total: 10,
-        icon: <FaPassport />,
-      },
-    ],
-  },
-  {
-    title: "The Event Stack",
-    objective:
-      "Transforming campus activity into a professional-grade revenue engine.",
-    theme: {
-      stroke: "#ec4899",
-      active: "#f472b6",
-      bg: "rgba(236, 72, 153, 0.2)",
-    },
-    quests: [
-      {
-        id: "c5q1",
-        name: "The Foundation Stack",
-        task: "Organize one event powered by 3 Collaborative Nodes.",
-        reward: "+2,500 IP",
-        progress: 0,
-        total: 1,
-        icon: <FaProjectDiagram />,
-      },
-      {
-        id: "c5q2",
-        name: "Revenue Catalyst",
-        task: "Generate ₹10,000 in gross revenue from a single Event Stack.",
-        reward: "+3,000 IP",
-        progress: 2450,
-        total: 10000,
-        icon: <FaMoneyBillWave />,
-      },
-      {
-        id: "c5q3",
-        name: "Ticket Surge",
-        task: "Successfully check in 500 unique ticket-holders at an event.",
-        reward: "+2,500 IP",
-        progress: 120,
-        total: 500,
-        icon: <FaTicketAlt />,
-      },
-      {
-        id: "c5q4",
-        name: "Brand Bridge",
-        task: "Secure a Brand Partner who pays for a slot, stall, or sponsorship.",
-        reward: "+4,000 IP",
-        progress: 0,
-        total: 1,
-        icon: <FaHandshake />,
-      },
-    ],
-  },
-  {
-    title: "Domination Orbit",
-    objective:
-      "Total university stabilization and the ultimate 'Titan' rewards.",
-    theme: {
-      stroke: "#eab308",
-      active: "#facc15",
-      bg: "rgba(234, 179, 8, 0.2)",
-    },
-    quests: [
-      {
-        id: "c6q1",
-        name: "Ecosystem Builder",
-        task: "10 active clubs + 1,000 members + 1 collaboration.",
-        reward: "+5000 IP",
-        progress: 0,
-        total: 1,
-        icon: <FaProjectDiagram />,
-      },
-      {
-        id: "c6q2",
-        name: "Regional Leader",
-        task: "Rank in the Top 5 universities in your region's IP leaderboard.",
-        reward: "+7000 IP",
-        progress: 12,
-        total: 5,
-        icon: <FaMedal />,
-      },
-      {
-        id: "c6q3",
-        name: "National Architect",
-        task: "20 clubs (100+ members) + 3 collaborations + 2 sponsored events.",
-        reward: "+10,000 IP",
-        progress: 0,
-        total: 1,
-        icon: <FaCrown />,
-      },
-      {
-        id: "c6q4",
-        name: "Interstellar Chapter",
-        task: "25 clubs + 2,000 members + 5 collaborations + Revenue milestone hit.",
-        reward: "Revenue Share Unlock",
-        badge: "Ambassador Status",
-        progress: 0,
-        total: 1,
-        icon: <GiGalaxy />,
-      },
-    ],
-  },
+const ORBIT_THEMES = [
+  { stroke: "#22c55e", active: "#4ade80", bg: "rgba(34, 197, 94, 0.2)" }, // Foundation Orbit
+  { stroke: "#3b82f6", active: "#60a5fa", bg: "rgba(59, 130, 246, 0.2)" }, // Growth Orbit
+  { stroke: "#a855f7", active: "#c084fc", bg: "rgba(168, 85, 247, 0.2)" }, // Engagement Orbit
+  { stroke: "#f97316", active: "#fb923c", bg: "rgba(249, 115, 22, 0.2)" }, // The Multiverse Orbit
+  { stroke: "#ec4899", active: "#f472b6", bg: "rgba(236, 72, 153, 0.2)" }, // The Event Stack
+  { stroke: "#eab308", active: "#facc15", bg: "rgba(234, 179, 8, 0.2)" }, // Domination Orbit
 ];
+
+const DEFAULT_THEME = { stroke: "#22c55e", active: "#4ade80", bg: "rgba(34, 197, 94, 0.2)" };
+
+import { chapterLeaderApi } from "../../../api/chapterLeader";
 
 const Club: React.FC = () => {
   const [activeStageIdx, setActiveStageIdx] = useState(0);
   const [hoveredQuestId, setHoveredQuestId] = useState<string | null>(null);
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
+  
+  const [stages, setStages] = useState<Stage[]>([]); // Start with empty array for dynamic rendering
+  const [dbLoading, setDbLoading] = useState(true);
+  const [claimingId, setClaimingId] = useState<string | null>(null);
+
+  const handleClaimReward = async (questId: string) => {
+    try {
+      setClaimingId(questId);
+      const res = await chapterLeaderApi.claimQuestReward(questId);
+      if (res.data?.success || res.status === 200 || res.status === 201) {
+        setStages(prevStages => prevStages.map(stage => ({
+          ...stage,
+          quests: stage.quests.map(quest => 
+            quest.id === questId ? { ...quest, isRewardClaimed: true, isCompleted: true } : quest
+          )
+        })));
+      }
+    } catch (error) {
+      console.error("Failed to claim reward:", error);
+    } finally {
+      setClaimingId(null);
+    }
+  };
+
+  useEffect(() => {
+    const fetchProgress = async () => {
+      try {
+        const res = await chapterLeaderApi.getQuestsProgress('club');
+        console.log(res)
+        if (res.data?.success && res.data.data?.orbits) {
+          const mappedStages = res.data.data.orbits.map((o: any, index: number) => {
+             const theme = ORBIT_THEMES[index % ORBIT_THEMES.length] || DEFAULT_THEME;
+             return {
+               title: o.orbit?.title || `Orbit ${o.orbit?.id || index + 1}`,
+               objective: o.orbit?.description || o.orbit?.subTitle || "",
+               theme: theme,
+               quests: o.quests.map((q: any, qIdx: number) => {
+
+                  const currentVal = Array.isArray(q.current) && q.current.length > 0 
+                    ? q.current[0]?.value || 0 
+                    : (typeof q.current === 'number' ? q.current : 0);
+                    
+                  const targetVal = Array.isArray(q.target) && q.target.length > 0 
+                    ? q.target[0] 
+                    : (typeof q.target === 'number' ? q.target : q.numOfEntities || 1);
+
+                  return {
+                    id: q.questId || String(qIdx),
+                    name: q.title || `Quest ${qIdx + 1}`,
+                    task: q.description || "",
+                    reward: q.ip ? `+${q.ip} IP` : "+100 IP",
+                    progress: currentVal,
+                    total: targetVal,
+                    isCompleted: q.isCompleted || false,
+                    isRewardClaimed: q.isRewardClaimed || false,
+                    icon: <FaMedal />,
+                    lottieData: null
+                  };
+               })
+             };
+          });
+          if (mappedStages.length > 0) {
+             setStages(mappedStages);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch quests progress", err);
+      } finally {
+        setDbLoading(false);
+      }
+    };
+    fetchProgress();
+  }, []);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -462,9 +240,17 @@ const Club: React.FC = () => {
     });
 
     return () => observer.disconnect();
-  }, []);
+  }, [stages]);
 
-  const currentStage = STAGES[activeStageIdx] || STAGES[0];
+  const currentStage = stages[activeStageIdx] || stages[0];
+
+  if (dbLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen text-white bg-[#0c121d] tracking-widest text-sm uppercase">
+        Initializing Orbit...
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center min-h-screen text-white w-full relative">
@@ -478,7 +264,7 @@ const Club: React.FC = () => {
       <StickyHeader currentStage={currentStage} label="Club Guild" />
       {/* --- MISSION MAP --- */}
       <div className="w-full flex flex-col items-center pb-64 pt-12 relative flex-1">
-        {STAGES.map((stage, sIdx) => (
+        {stages.map((stage, sIdx) => (
           <div
             key={stage.title}
             ref={(el) => {
@@ -507,7 +293,7 @@ const Club: React.FC = () => {
             {/* Quests Path */}
             <div className="w-full max-w-4xl flex flex-col items-center gap-24 relative">
               {stage.quests.map((quest, qIdx) => {
-                const isCompleted = quest.progress >= quest.total;
+                const isCompleted = quest.isCompleted || quest.progress >= quest.total;
                 const isEven = qIdx % 2 === 0;
 
                 return (
@@ -639,7 +425,7 @@ const Club: React.FC = () => {
                           </div>
 
                           {/* Reward Badge */}
-                          <div className="mt-6 pt-6 border-t border-white/5 flex items-center justify-between">
+                          <div className="mt-6 pt-6 border-t border-white/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                             <div className="flex flex-col text-left">
                               <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">
                                 Reward
@@ -648,9 +434,28 @@ const Club: React.FC = () => {
                                 {quest.reward}
                               </span>
                             </div>
-                            <button className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-black uppercase rounded-xl transition-all shadow-lg active:scale-95">
-                              Start
-                            </button>
+                            
+                            <div className="shrink-0 flex items-center justify-center pointer-events-auto z-10">
+                              {isCompleted ? (
+                                quest.isRewardClaimed ? (
+                                  <div className="px-5 py-2.5 bg-green-500/20 text-green-400 border border-green-500/30 text-[11px] font-black uppercase rounded-xl shadow-lg flex items-center justify-center gap-1.5 min-w-[100px]">
+                                    <IoIosCheckmarkCircle className="text-sm" /> Claimed
+                                  </div>
+                                ) : (
+                                  <button 
+                                    onClick={(e) => { e.stopPropagation(); handleClaimReward(quest.id); }}
+                                    disabled={claimingId === quest.id}
+                                    className="px-6 py-2.5 bg-yellow-500 hover:bg-yellow-400 text-black text-[11px] font-black uppercase rounded-xl transition-all shadow-lg active:scale-95 disabled:opacity-50 min-w-[100px]"
+                                  >
+                                    {claimingId === quest.id ? "..." : "Claim IP"}
+                                  </button>
+                                )
+                              ) : (
+                                <div className="px-5 py-2.5 bg-white/5 text-gray-400 border border-white/10 text-[11px] font-black uppercase rounded-xl shadow-none min-w-[100px] text-center">
+                                  In Progress
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>

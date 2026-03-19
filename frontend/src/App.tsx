@@ -8,6 +8,7 @@ import { ROLES } from "./utils/constants";
 
 // Lazy load login
 const Login = lazy(() => import("./features/auth/Login"));
+const Register = lazy(() => import("./features/auth/Register"));
 
 const App: React.FC = () => {
   return (
@@ -15,6 +16,7 @@ const App: React.FC = () => {
       <Routes>
         {/* Public Routes */}
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
         {/* Private Routes */}
         <Route element={<ProtectedRoute />}>

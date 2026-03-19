@@ -1,0 +1,26 @@
+[
+    {
+        "_id":  "6892020010101",
+        "title" : "Foundation Orbit",
+        "objective" : "Establishing the first nodes of gravity on campus.",
+        "quests" : [
+            {
+                "_id" : "4523454545",
+                "name" : "Spark Ignition",
+                "description" : "Get 1 club to 50 members.",
+                "ip" : 200,
+                "logo" : "",
+                "questType": "single",
+                "metric":"clubs_created",
+                "targetEntities" : 1,
+                "config":{
+                    "minMembers":50
+                }
+            },
+            {
+                
+            }
+        ]
+
+    }
+]

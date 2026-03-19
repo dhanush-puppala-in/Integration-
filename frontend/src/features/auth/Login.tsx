@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { ROLES, type Role } from "../../utils/constants";
 
@@ -15,14 +15,15 @@ const Login: React.FC = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await login(role);
+      await login(email, password, role);
       if (role === ROLES.ADMIN) {
         navigate("/admin/home");
       } else {
         navigate("/chapterleader/club");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login failed", error);
+      alert(error.response?.data?.message || "Login failed");
     } finally {
       setLoading(false);
     }
@@ -187,6 +188,10 @@ const Login: React.FC = () => {
             {loading ? "Logging in..." : "Sign In"}
           </button>
         </form>
+        
+        <p style={{ marginTop: "20px", color: "#a3aed0" }}>
+          Don't have an account? <Link to="/register" style={{ color: "#422afb", fontWeight: "600" }}>Sign Up</Link>
+        </p>
       </div>
     </div>
   );
