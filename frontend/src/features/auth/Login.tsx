@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { ROLES, type Role } from "../../utils/constants";
+import { ChevronDown, Shield, User } from "lucide-react";
 
 const Login: React.FC = () => {
   const { login } = useAuth();
@@ -10,6 +11,7 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<Role>(ROLES.ADMIN);
   const [loading, setLoading] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -119,7 +121,7 @@ const Login: React.FC = () => {
             />
           </div>
 
-          <div style={{ textAlign: "left" }}>
+          <div style={{ textAlign: "left", position: "relative" }}>
             <label
               style={{
                 display: "block",
@@ -128,43 +130,83 @@ const Login: React.FC = () => {
                 fontWeight: "500",
               }}
             >
-              Select Role
+              Role
             </label>
-            <div style={{ display: "flex", gap: "12px" }}>
-              <button
-                type="button"
-                onClick={() => setRole(ROLES.ADMIN)}
-                style={{
-                  flex: 1,
-                  padding: "10px",
-                  borderRadius: "10px",
-                  border: "none",
-                  backgroundColor: role === ROLES.ADMIN ? "#422afb" : "#f4f7fe",
-                  color: role === ROLES.ADMIN ? "#fff" : "#422afb",
-                  cursor: "pointer",
-                  fontWeight: "600",
-                }}
-              >
-                Admin
-              </button>
-              <button
-                type="button"
-                onClick={() => setRole(ROLES.CHAPTER)}
-                style={{
-                  flex: 1,
-                  padding: "10px",
-                  borderRadius: "10px",
-                  border: "none",
-                  backgroundColor:
-                    role === ROLES.CHAPTER ? "#422afb" : "#f4f7fe",
-                  color: role === ROLES.CHAPTER ? "#fff" : "#422afb",
-                  cursor: "pointer",
-                  fontWeight: "600",
-                }}
-              >
-                Chapter
-              </button>
+            <div 
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              style={{
+                width: "100%",
+                padding: "14px 20px",
+                borderRadius: "12px",
+                border: "1px solid #e0e5f2",
+                backgroundColor: "#fff",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                cursor: "pointer",
+                transition: "all 0.2s ease"
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "#2b3674", fontWeight: "600" }}>
+                {/* {role === ROLES.ADMIN ? <Shield size={18} color="#422afb" /> : <User size={18} color="#422afb" />} */}
+                {role === ROLES.ADMIN ? "Admin" : "Chapter Leader"}
+              </div>
+              <ChevronDown size={20} color="#a3aed0" style={{ transform: isDropdownOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "0.2s transform ease" }} />
             </div>
+
+            {isDropdownOpen && (
+              <div 
+                style={{
+                  position: "absolute",
+                  top: "calc(100% + 8px)",
+                  left: 0,
+                  width: "100%",
+                  backgroundColor: "#fff",
+                  borderRadius: "12px",
+                  boxShadow: "0 10px 40px rgba(0,0,0,0.12)",
+                  border: "1px solid #e0e5f2",
+                  zIndex: 100,
+                  overflow: "hidden"
+                }}
+              >
+                <div 
+                  onClick={() => { setRole(ROLES.ADMIN); setIsDropdownOpen(false); }}
+                  style={{
+                    padding: "14px 20px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    cursor: "pointer",
+                    backgroundColor: role === ROLES.ADMIN ? "#f4f7fe" : "#fff",
+                    borderBottom: "1px solid #f4f7fe",
+                    transition: "background-color 0.15s ease"
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f4f7fe"}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = role === ROLES.ADMIN ? "#f4f7fe" : "#fff"}
+                >
+                  {/* <Shield size={18} color={role === ROLES.ADMIN ? "#422afb" : "#a3aed0"} /> */}
+                  <span style={{ fontWeight: "600", color: role === ROLES.ADMIN ? "#422afb" : "#2b3674" }}>Admin</span>
+                </div>
+                
+                <div 
+                  onClick={() => { setRole(ROLES.CHAPTER); setIsDropdownOpen(false); }}
+                  style={{
+                    padding: "14px 20px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    cursor: "pointer",
+                    backgroundColor: role === ROLES.CHAPTER ? "#f4f7fe" : "#fff",
+                    transition: "background-color 0.15s ease"
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f4f7fe"}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = role === ROLES.CHAPTER ? "#f4f7fe" : "#fff"}
+                >
+                  {/* <User size={18} color={role === ROLES.CHAPTER ? "#422afb" : "#a3aed0"} /> */}
+                  <span style={{ fontWeight: "600", color: role === ROLES.CHAPTER ? "#422afb" : "#2b3674" }}>Chapter Leader</span>
+                </div>
+              </div>
+            )}
           </div>
 
           <button
@@ -191,6 +233,9 @@ const Login: React.FC = () => {
         
         <p style={{ marginTop: "20px", color: "#a3aed0" }}>
           Don't have an account? <Link to="/register" style={{ color: "#422afb", fontWeight: "600" }}>Sign Up</Link>
+        </p>
+        <p style={{ marginTop: "10px", color: "#a3aed0", fontSize: "14px" }}>
+          <Link to="/forgot-password" style={{ color: "#422afb", fontWeight: "600" }}>Forgot Password?</Link>
         </p>
       </div>
     </div>

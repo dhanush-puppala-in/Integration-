@@ -35,9 +35,18 @@ const DashboardLayout: React.FC = () => {
           }
         >
           <div
-            className={`mx-auto ${isAdminStatistic || isProfilePage ? "w-full" : "max-w-[1600px]"}`}
+            className={`mx-auto ${isAdminStatistic || isProfilePage ? "w-full" : "max-w-[1600px] flex flex-col h-full"}`}
           >
-            <Outlet />
+            <div className="flex-1">
+              <Outlet />
+            </div>
+            
+            {/* Mobile Right Sidebar Elements appended underneath Outlet */}
+            {!isAdminStatistic && !isProfilePage && (
+              <div className="lg:hidden p-4 pb-24 mt-8 border-t border-white/10 w-full max-w-4xl mx-auto">
+                <RightSidebar className="flex flex-col gap-6 w-full" hideProfile={true} />
+              </div>
+            )}
           </div>
         </Suspense>
       </main>

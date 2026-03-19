@@ -1,18 +1,24 @@
 import React, { useState, useEffect, useRef } from "react";
-import { IoIosCheckmarkCircle } from "react-icons/io";
+import { useAuth } from "../../../context/AuthContext";
+import { useToast } from "../../../context/ToastContext";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../../store";
+import { IoIosCheckmarkCircle, IoMdFlame } from "react-icons/io";
 import {
-  FaTicketAlt,
-  FaStar,
-  FaShareAlt,
-  FaUserFriends,
-  FaQrcode,
-  FaProjectDiagram,
-  FaUsers,
   FaGlobeAmericas,
+  FaComments,
+  FaUsers,
+  FaChartLine,
+  FaProjectDiagram,
+  FaUserTie,
+  FaPassport,
   FaMoneyBillWave,
+  FaTicketAlt,
   FaHandshake,
+  FaMedal,
   FaCrown,
 } from "react-icons/fa";
+import { GiGalaxy } from "react-icons/gi";
 import CircularProgress from "../components/CircularProgress";
 import image from "../../../assets/image.png";
 import StickyHeader from "../components/StickyHeader";
@@ -25,9 +31,43 @@ import planetLoaderLottie from "../../../assets/Planet laoder.json";
 import redPlanetLottie from "../../../assets/Red Planet.json";
 import rotatingPlanetLottie from "../../../assets/Rotating Planet Loader.json";
 
+export const formatTimeAgo = (dateString?: string | null): string => {
+  if (!dateString) return "Just now";
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  
+  if (diffInSeconds < 60) return `${diffInSeconds} secs ago`;
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) return `${diffInMinutes} mins ago`;
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) return `${diffInHours} hrs ago`;
+  const diffInDays = Math.floor(diffInHours / 24);
+  return `${diffInDays} d ago`;
+};
+
+export const formatTimeUntil = (dateString?: string | null): string => {
+  if (!dateString) return "Soon";
+  const lastUpdate = new Date(dateString);
+  const nextUpdate = new Date(lastUpdate.getTime() + 3 * 60 * 60 * 1000); // 3 hours later
+  const now = new Date();
+  const diffInSeconds = Math.floor((nextUpdate.getTime() - now.getTime()) / 1000);
+  
+  if (diffInSeconds <= 0) return "Any moment now";
+  
+  if (diffInSeconds < 60) return `${diffInSeconds} secs`;
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) return `${diffInMinutes} mins`;
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  const remainingMins = diffInMinutes % 60;
+  return remainingMins > 0 ? `${diffInHours} hrs ${remainingMins} mins` : `${diffInHours} hrs`;
+};
+
 const Starfield = () => {
   const stars = [...Array(450)].map((_, i) => {
+    // Logic to create a "Milky Way" diagonal density
     const isInBand = Math.random() > 0.6;
+
     return {
       id: i,
       top: `${Math.random() * 100}%`,
@@ -57,8 +97,11 @@ const Starfield = () => {
   }));
 
   return (
-    <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden select-none">
-      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-purple-500/5 to-transparent rotate-12 scale-150 blur-[100px]" />
+    <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden select-none ">
+      {/* Milky Way Subtle Gradient Band */}
+      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-blue-500/5 to-transparent rotate-12 scale-150 blur-[100px]" />
+
+      {/* Nebula Glows */}
       {nebulas.map((neb) => (
         <div
           key={`neb-${neb.id}`}
@@ -73,6 +116,8 @@ const Starfield = () => {
           }}
         />
       ))}
+
+      {/* Stars */}
       {stars.map((star) => (
         <div
           key={star.id}
@@ -94,6 +139,7 @@ const Starfield = () => {
   );
 };
 
+// --- Types ---
 interface Quest {
   id: string;
   name: string;
@@ -102,8 +148,13 @@ interface Quest {
   badge?: string;
   progress: number;
   total: number;
+  overallProgress?: number;
+  isCompleted?: boolean;
+  isRewardClaimed?: boolean;
   icon: React.ReactNode;
   lottieData?: any;
+  type?: string;
+  lastUpdatedAt?: string;
 }
 
 interface Stage {
@@ -117,178 +168,113 @@ interface Stage {
   };
 }
 
-const STAGES: Stage[] = [
-  {
-    title: "Participant Orbit",
-    objective: "Mastering the platform’s event-tech (Ticketing & Scans).",
-    theme: {
-      stroke: "#22c55e",
-      active: "#4ade80",
-      bg: "rgba(34, 197, 94, 0.2)",
-    },
-    quests: [
-      {
-        id: "e1q1",
-        name: "The Ticket Pioneer",
-        task: "Purchase and check into 3 events using QR Scan.",
-        reward: "+200 IP",
-        badge: "Active Attendee",
-        progress: 1,
-        total: 3,
-        icon: <FaTicketAlt />,
-        lottieData: earthLottie,
-      },
-      {
-        id: "s1q2",
-        name: "The Digital Critic",
-        task: "Leave 5 'Verified Reviews' (with photos) for events you attended.",
-        reward: "+400 IP",
-        progress: 2,
-        total: 5,
-        icon: <FaStar />,
-        lottieData: planetOrbitLottie,
-      },
-      {
-        id: "s1q3",
-        name: "The Event Scout",
-        task: "Share 5 upcoming events to your personal 'Stitch Feed'.",
-        reward: "+500 IP",
-        progress: 0,
-        total: 5,
-        icon: <FaShareAlt />,
-        lottieData: planetStarsLottie,
-      },
-    ],
-  },
-  {
-    title: "THE NETWORK PULSE (Growth)",
-    objective: "Expanding your influence and building communities.",
-    theme: {
-      stroke: "#f59e0b",
-      active: "#fbbf24",
-      bg: "rgba(245, 158, 11, 0.2)",
-    },
-    quests: [
-      {
-        id: "s2q1",
-        name: "The Viral Engine",
-        task: "Refer 10 friends who purchase their first ticket through your link.",
-        reward: "+1000 IP",
-        progress: 4,
-        total: 10,
-        icon: <FaUserFriends />,
-        lottieData: planetLoaderLottie,
-      },
-      {
-        id: "s2q2",
-        name: "The Access Master",
-        task: "Use 'Priority Booking' to secure tickets for 2 high-demand events.",
-        reward: "+800 IP",
-        progress: 1,
-        total: 2,
-        icon: <FaCrown />,
-        lottieData: redPlanetLottie,
-      },
-      {
-        id: "s2q3",
-        name: "The QR Ranger",
-        task: "Complete 10 event check-ins to unlock the 'Event Veteran' badge.",
-        reward: "+1200 IP",
-        progress: 7,
-        total: 10,
-        icon: <FaQrcode />,
-        lottieData: rotatingPlanetLottie,
-      },
-    ],
-  },
-  {
-    title: "THE ARCHITECT ORBIT (Elite)",
-    objective: "Mastering the event stack and driving massive results.",
-    theme: {
-      stroke: "#ef4444",
-      active: "#f87171",
-      bg: "rgba(239, 68, 68, 0.2)",
-    },
-    quests: [
-      {
-        id: "s3q1",
-        name: "The Event Architect",
-        task: "Coordinate with 3 different event organizers as an 'Assistant Promoter'.",
-        reward: "+2500 IP",
-        progress: 1,
-        total: 3,
-        icon: <FaProjectDiagram />,
-        lottieData: earthLottie,
-      },
-      {
-        id: "s3q2",
-        name: "The Community Pillar",
-        task: "Host a 'Stitch Meetup' within an event that attracts 20+ attendees.",
-        reward: "+3000 IP",
-        progress: 0,
-        total: 1,
-        icon: <FaUsers />,
-        lottieData: planetOrbitLottie,
-      },
-      {
-        id: "s3q3",
-        name: "The Global Ambassador",
-        task: "Drive ticket sales from 5 different cities using the global stitching network.",
-        reward: "+5000 IP",
-        progress: 1,
-        total: 5,
-        icon: <FaGlobeAmericas />,
-        lottieData: planetStarsLottie,
-      },
-    ],
-  },
-  {
-    title: "THE LEGENDARY VOID (Master)",
-    objective: "The ultimate tier of event mastery.",
-    theme: {
-      stroke: "#a855f7",
-      active: "#c084fc",
-      bg: "rgba(168, 85, 247, 0.2)",
-    },
-    quests: [
-      {
-        id: "s4q1",
-        name: "The Revenue Titan",
-        task: "Generate $5000+ in total ticket revenue through your promoter link.",
-        reward: "+10,000 IP",
-        progress: 1250,
-        total: 5000,
-        icon: <FaMoneyBillWave />,
-        lottieData: planetLoaderLottie,
-      },
-      {
-        id: "s4q2",
-        name: "The Sponsor's Ally",
-        task: "Facilitate a successful brand deal for a major event.",
-        reward: "+15,000 IP",
-        progress: 0,
-        total: 1,
-        icon: <FaHandshake />,
-        lottieData: redPlanetLottie,
-      },
-      {
-        id: "e4q3",
-        name: "Interstellar Festival",
-        task: "1,000+ Attendees + 5 Clubs + ₹50,000 Revenue.",
-        reward: "+30,000 IP",
-        badge: "Event Overlord",
-        progress: 0,
-        total: 1,
-        icon: <FaCrown />,
-      },
-    ],
-  },
+const ORBIT_THEMES = [
+  { stroke: "#22c55e", active: "#4ade80", bg: "rgba(34, 197, 94, 0.2)" }, // Foundation Orbit
+  { stroke: "#3b82f6", active: "#60a5fa", bg: "rgba(59, 130, 246, 0.2)" }, // Growth Orbit
+  { stroke: "#a855f7", active: "#c084fc", bg: "rgba(168, 85, 247, 0.2)" }, // Engagement Orbit
+  { stroke: "#f97316", active: "#fb923c", bg: "rgba(249, 115, 22, 0.2)" }, // The Multiverse Orbit
+  { stroke: "#ec4899", active: "#f472b6", bg: "rgba(236, 72, 153, 0.2)" }, // The Event Stack
+  { stroke: "#eab308", active: "#facc15", bg: "rgba(234, 179, 8, 0.2)" }, // Domination Orbit
 ];
 
+const DEFAULT_THEME = { stroke: "#22c55e", active: "#4ade80", bg: "rgba(34, 197, 94, 0.2)" };
+
+import { chapterLeaderApi } from "../../../api/chapterLeader";
+import GlobalLoader from "../../../components/GlobalLoader";
+
 const Events: React.FC = () => {
+  const { user, fetchChapterLeaderDetails } = useAuth();
+  const { addToast } = useToast();
+  const { details } = useSelector((state: RootState) => state.chapterLeader);
   const [activeStageIdx, setActiveStageIdx] = useState(0);
   const [hoveredQuestId, setHoveredQuestId] = useState<string | null>(null);
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
+  
+  const [stages, setStages] = useState<Stage[]>([]); // Start with empty array for dynamic rendering
+  const [dbLoading, setDbLoading] = useState(true);
+  const [claimingId, setClaimingId] = useState<string | null>(null);
+
+  const handleClaimReward = async (questId: string) => {
+    try {
+      setClaimingId(questId);
+      const res = await chapterLeaderApi.claimQuestReward(questId, (details?._id || user?.id || (user as any)?._id) as string);
+      if (res.data?.success || res.status === 200 || res.status === 201) {
+        setStages(prevStages => prevStages.map(stage => ({
+          ...stage,
+          quests: stage.quests.map(quest => 
+            quest.id === questId ? { ...quest, isRewardClaimed: true, isCompleted: true } : quest
+          )
+        })));
+        addToast("Reward claimed successfully!", "success");
+        await fetchChapterLeaderDetails();
+      }
+    } catch (error) {
+      console.error("Failed to claim reward:", error);
+    } finally {
+      setClaimingId(null);
+    }
+  };
+
+  useEffect(() => {
+    const fetchProgress = async () => {
+      try {
+        const res = await chapterLeaderApi.getQuestsProgress('events');
+        console.log(res)
+        if (res.data?.success && res.data.data?.orbits) {
+          const mappedStages = res.data.data.orbits.map((o: any, index: number) => {
+             const theme = ORBIT_THEMES[index % ORBIT_THEMES.length] || DEFAULT_THEME;
+             return {
+               title: o.orbit?.title || `Orbit ${o.orbit?.id || index + 1}`,
+               objective: o.orbit?.description || o.orbit?.subTitle || "",
+               theme: theme,
+               quests: o.quests.map((q: any, qIdx: number) => {
+
+                  let currentVal = 0;
+                  let targetVal = 1;
+
+                  if (q.numOfEntities !== undefined && q.numOfEntities >= 1) {
+                    currentVal = Array.isArray(q.current) ? q.current.filter((c: any) => c.isCompleted).length : 0;
+                    targetVal = q.numOfEntities;
+                  } else {
+                    currentVal = Array.isArray(q.current) && q.current.length > 0 
+                      ? q.current[0]?.value || 0 
+                      : (typeof q.current === 'number' ? q.current : 0);
+                      
+                    targetVal = Array.isArray(q.target) && q.target.length > 0 
+                      ? q.target[0] 
+                      : (typeof q.target === 'number' ? q.target : 1);
+                  }
+
+                  return {
+                    id: q.questId || String(qIdx),
+                    name: q.title || `Quest ${qIdx + 1}`,
+                    task: q.description || "",
+                    reward: q.ip ? `+${q.ip} IP` : "+100 IP",
+                    progress: currentVal,
+                    total: targetVal,
+                    overallProgress: q.overallProgress || 0,
+                    isCompleted: q.isCompleted || false,
+                    isRewardClaimed: q.isRewardClaimed || false,
+                    type: q.type || 'continuous',
+                    lastUpdatedAt: q.lastUpdatedAt || null,
+                    icon: <FaMedal />,
+                    lottieData: null
+                  };
+               })
+             };
+          });
+          if (mappedStages.length > 0) {
+             setStages(mappedStages);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch quests progress", err);
+      } finally {
+        setDbLoading(false);
+      }
+    };
+    fetchProgress();
+  }, []);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -302,26 +288,35 @@ const Events: React.FC = () => {
           }
         });
       },
-      { threshold: 0.2, rootMargin: "-100px 0px -40% 0px" },
+      { threshold: 0, rootMargin: "-15% 0px -80% 0px" },
     );
+
     sectionRefs.current.forEach((ref) => {
       if (ref) observer.observe(ref);
     });
-    return () => observer.disconnect();
-  }, []);
 
-  const currentStage = STAGES[activeStageIdx] || STAGES[0];
+    return () => observer.disconnect();
+  }, [stages]);
+
+  const currentStage = stages[activeStageIdx] || stages[0];
+
+  if (dbLoading) {
+    return <GlobalLoader text="Initializing Orbit..." fullScreen={false} />;
+  }
 
   return (
-    <div className="flex flex-col items-center min-h-screen text-white w-full relative overflow-x-hidden">
+    <div className="flex flex-col items-center min-h-screen text-white w-full relative">
+      {/* Mobile-only Status Bar AT THE TOP - NOW STICKY */}
+
+      <div className="fixed inset-0 z-0 pointer-events-none" />
+      <div className="fixed inset-0 z-0 pointer-events-none" />
       <Starfield />
 
       {/* --- STICKY HEADER --- */}
-      <StickyHeader currentStage={currentStage} label="Event Multiverse" />
-
+      <StickyHeader currentStage={currentStage} label="Events Guild" />
       {/* --- MISSION MAP --- */}
-      <div className="w-full flex flex-col items-center pb-64 pt-12 relative flex-1 max-w-2xl mx-auto">
-        {STAGES.map((stage, sIdx) => (
+      <div className="w-full flex flex-col items-center pb-64 pt-12 relative flex-1">
+        {stages.map((stage, sIdx) => (
           <div
             key={stage.title}
             ref={(el) => {
@@ -330,31 +325,38 @@ const Events: React.FC = () => {
             data-stage-idx={sIdx}
             className="w-full flex flex-col items-center mb-16"
           >
+            {/* Stage Title Section */}
             <div className="mb-16 flex flex-col items-center text-center px-6">
-              <h2 className="text-2xl font-black uppercase tracking-widest mb-1 text-gray-400">
-                STAGE {sIdx + 1}
-              </h2>
-              <h3 className="text-4xl font-black uppercase tracking-tighter mb-3">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="h-0.5 w-12 bg-white/5" />
+                <span className="text-[11px] font-black tracking-[0.5em] text-gray-500 uppercase">
+                  Stage {sIdx + 1}
+                </span>
+                <div className="h-0.5 w-12 bg-white/5" />
+              </div>
+              <h2 className="text-3xl font-black uppercase tracking-tighter mb-3 underline decoration-white/5 underline-offset-8 decoration-4">
                 {stage.title}
-              </h3>
-              <p className="max-w-md text-gray-500 text-sm font-medium italic">
+              </h2>
+              <p className="max-w-md text-gray-500 text-sm italic font-medium">
                 "{stage.objective}"
               </p>
             </div>
 
-            <div className="w-full flex flex-col items-center relative py-10">
+            {/* Quests Path */}
+            <div className="w-full max-w-4xl flex flex-col items-center gap-24 relative">
               {stage.quests.map((quest, qIdx) => {
-                const isCompleted = quest.progress >= quest.total;
+                const isFullProgress = quest.progress >= quest.total && (quest.overallProgress || 0) >= 100;
+                const isCompleted = quest.isCompleted || isFullProgress;
                 const isEven = qIdx % 2 === 0;
 
                 return (
                   <div
                     key={quest.id}
-                    className="relative mb-52 flex items-center justify-center w-full group"
+                    className={`relative mb-52 flex items-center justify-center w-full group ${hoveredQuestId === quest.id ? "z-[999]" : "z-10"}`}
                   >
-                    {/* Curved Dotted Connecting Line (Larger Gap) */}
+                    {/* Curved Dotted Connecting Line (Gapless) */}
                     {qIdx < stage.quests.length - 1 && (
-                      <div className="absolute top-[120px] left-1/2 -translate-x-1/2 w-64 h-52 pointer-events-none opacity-20 z-0">
+                      <div className="absolute top-[67.5px] left-1/2 -translate-x-1/2 w-64 h-[450px] pointer-events-none opacity-30 z-0">
                         <svg
                           className="w-full h-full overflow-visible"
                           viewBox="0 0 100 100"
@@ -362,8 +364,8 @@ const Events: React.FC = () => {
                           <path
                             d={
                               isEven
-                                ? "M 50 0 Q 0 50 50 100"
-                                : "M 50 0 Q 100 50 50 100"
+                                ? "M 50 -10 Q 0 50 50 105"
+                                : "M 50 -10 Q 100 50 50 105"
                             }
                             fill="transparent"
                             stroke="white"
@@ -376,18 +378,21 @@ const Events: React.FC = () => {
 
                     {/* Quest Node Interaction Area (Stationary Parent) */}
                     <div
-                      className="relative z-30 flex items-center justify-center"
+                      className={`relative flex items-center justify-center ${hoveredQuestId === quest.id ? "z-[99]" : "z-30"}`}
                       onMouseEnter={() => setHoveredQuestId(quest.id)}
                       onMouseLeave={() => setHoveredQuestId(null)}
                     >
+                      {/* INVISIBLE HOVER BRIDGE TO PREVENT MOUSELEAVE DROPOUT */}
+                      {hoveredQuestId === quest.id && <div className="absolute w-[500px] h-[200px] z-0" />}
+                      
                       {/* Circle Node (Moves on Hover - Desktop Only) */}
                       <div
                         className={`relative z-20 flex-shrink-0 transition-all duration-700 ease-out cursor-help
                           ${
                             hoveredQuestId === quest.id
                               ? isEven
-                                ? "md:-translate-x-[160px]"
-                                : "md:translate-x-[160px]"
+                                ? "md:-translate-x-[120px]"
+                                : "md:translate-x-[120px]"
                               : ""
                           }
                         `}
@@ -421,72 +426,101 @@ const Events: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* Quest Detail Card (Sliding Reveal) */}
                       <div
                         className={`
-                          absolute z-[100] w-[min(350px,94vw)] opacity-0 pointer-events-none 
-                          ${hoveredQuestId === quest.id ? "opacity-100 pointer-events-auto" : ""}
+                          absolute z-[100] w-[380px] 
+                          ${hoveredQuestId === quest.id ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}
                           transition-all duration-700 ease-out
-                          ${isEven ? "md:left-1/2 md:ml-[-40px]" : "md:right-1/2 md:mr-[-40px]"}
-                          left-1/2 -translate-x-1/2 md:translate-x-0
+                          left-1/2 -translate-x-1/2 
+                          ${
+                            hoveredQuestId === quest.id
+                              ? isEven
+                                ? "md:translate-x-[calc(-50%+180px)]"
+                                : "md:translate-x-[calc(-50%-180px)]"
+                              : "md:translate-x-[-50%]"
+                          }
                           top-1/2 -translate-y-1/2
                         `}
                       >
-                        <div className="bg-[#0c121d] border-2 border-white/10 rounded-[2rem] p-5 sm:p-6 shadow-[0_40px_80px_rgba(0,0,0,0.8)] relative">
-                          {/* Triangle Pointer - Hidden on Mobile */}
-                          <div
-                            className={`hidden md:block absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-[#0c121d] border-l-2 border-b-2 border-white/10 rotate-45
-                            ${isEven ? "-left-[7px]" : "left-auto -right-[7px] rotate-[225deg]"}
-                          `}
-                          />
+                        <div className="bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-[0_30px_60px_rgba(0,0,0,0.6)] relative overflow-visible">
+                          <div className="flex gap-4 items-start w-full relative z-10">
+                            {/* Left Column: Info & Progress Bar */}
+                            <div className="flex-1 flex flex-col gap-2 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="text-white font-bold text-sm uppercase tracking-tight truncate">
+                                  {quest.name}
+                                </span>
+                                {isCompleted && (
+                                  <IoIosCheckmarkCircle className="text-green-500 text-sm shrink-0" />
+                                )}
+                              </div>
+                              <p className="text-gray-400 text-[11px] leading-snug line-clamp-2">
+                                {quest.task}
+                              </p>
+                              
+                              <div className="mt-1 w-full flex flex-col gap-1.5">
+                                <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                                  <div
+                                    className="h-full transition-all duration-1000"
+                                    style={{
+                                      width: `${Math.min((quest.progress / quest.total) * 100, 100)}%`,
+                                      backgroundColor: isCompleted ? stage.theme.stroke : stage.theme.active,
+                                      boxShadow: `0 0 10px ${isCompleted ? stage.theme.stroke : stage.theme.active}`,
+                                    }}
+                                  />
+                                </div>
+                                <div className="flex justify-between items-center text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-1">
+                                  {quest.type === 'continuous' ? (
+                                    <span>{quest.progress}/{quest.total}</span>
+                                  ) : (
+                                    <>
+                                      <span>Progress: {quest.progress}/{quest.total}</span>
+                                      <span>{Math.round((quest.progress / quest.total) * 100)}%</span>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
 
-                          <div className="flex items-center gap-4 mb-2 text-left">
-                            <span className="text-white font-black text-base uppercase tracking-tight">
-                              {quest.name}
-                            </span>
-                            {isCompleted && (
-                              <IoIosCheckmarkCircle className="text-green-500 text-lg" />
-                            )}
+                            {/* Right Column: Reward & Action */}
+                            <div className="w-[100px] shrink-0 flex flex-col items-center justify-between gap-3 pt-1 border-l border-white/5 pl-4">
+                              <div className="flex flex-col items-center text-center">
+                                <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest mb-0.5">
+                                  Reward
+                                </span>
+                                <span className="text-yellow-400 font-black text-sm">
+                                  {quest.reward}
+                                </span>
+                              </div>
+                              
+                              <div className="w-full">
+                                {isCompleted ? (
+                                  quest.isRewardClaimed ? (
+                                    <div className="py-1.5 bg-green-500/10 text-green-400 border border-green-500/20 text-[8px] font-black uppercase rounded-lg text-center">
+                                      Claimed
+                                    </div>
+                                  ) : (
+                                    <button 
+                                      onClick={(e) => { e.stopPropagation(); handleClaimReward(quest.id); }}
+                                      disabled={claimingId === quest.id}
+                                      className="w-full py-1.5 bg-yellow-500 text-black text-[8px] font-black uppercase rounded-lg hover:bg-yellow-400 transition-all active:scale-95"
+                                    >
+                                      {claimingId === quest.id ? "..." : "Claim"}
+                                    </button>
+                                  )
+                                ) : (
+                                  <div className="py-1.5 bg-white/5 text-gray-500 border border-white/5 text-[8px] font-black uppercase rounded-lg text-center">
+                                    In Progress
+                                  </div>
+                                )}
+                              </div>
+                            </div>
                           </div>
-                          <p className="text-gray-400 text-[13px] leading-relaxed mb-4 text-left">
-                            {quest.task}
-                          </p>
-
-                          <div className="flex flex-col gap-2 items-start">
-                            <div className="flex justify-between items-center w-full">
-                              <span className="text-gray-500 font-bold text-[10px] uppercase tracking-widest">
-                                Progress
-                              </span>
-                              <span className="text-white font-black text-xs">
-                                {quest.progress} / {quest.total}
-                              </span>
-                            </div>
-                            <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
-                              <div
-                                className="h-full transition-all duration-1000"
-                                style={{
-                                  width: `${Math.min((quest.progress / quest.total) * 100, 100)}%`,
-                                  backgroundColor: isCompleted
-                                    ? stage.theme.stroke
-                                    : stage.theme.active,
-                                }}
-                              />
-                            </div>
-                          </div>
-
-                          {/* Reward Section */}
-                          <div className="mt-auto pt-6 border-t border-white/5 flex items-end justify-between gap-6">
-                            <div className="flex flex-col text-left min-w-0 pb-1">
-                              <span className="text-[9px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-1.5 whitespace-nowrap opacity-80">
-                                Reward
-                              </span>
-                              <span className="text-yellow-400 font-black text-sm leading-none mt-0.5">
-                                {quest.reward}
-                              </span>
-                            </div>
-                            <button className="flex-shrink-0 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-black uppercase tracking-widest rounded-xl transition-all shadow-[0_8px_16px_-4px_rgba(37,99,235,0.4)] active:scale-95">
-                              Master
-                            </button>
+                          
+                          {/* Timestamps Row - Full Width */}
+                          <div className="flex justify-between items-center text-[8px] font-bold  mt-4 pt-3 border-t border-white/5 w-full">
+                            <span className="text-blue-400/80">Last Updated: {formatTimeAgo(quest.lastUpdatedAt)}</span>
+                            <span className="text-purple-400/80">Next Update: {formatTimeUntil(quest.lastUpdatedAt)}</span>
                           </div>
                         </div>
                       </div>
@@ -497,59 +531,13 @@ const Events: React.FC = () => {
             </div>
           </div>
         ))}
+      </div>
 
-        {/* --- STACK MULTIPLIER LEGEND --- */}
-        <div className="mt-20 w-full max-w-lg p-8 bg-black/40 border border-white/10 rounded-[2.5rem] relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 blur-3xl rounded-full" />
-          <h2 className="text-xl font-black uppercase tracking-tighter mb-6 flex items-center gap-3">
-            <FaProjectDiagram className="text-purple-500" /> Stack Multipliers
-          </h2>
-          <div className="space-y-4">
-            {[
-              {
-                level: "Solo Event",
-                desc: "1 Club Only",
-                mult: "1x",
-                color: "text-gray-400",
-              },
-              {
-                level: "Cluster Event",
-                desc: "3+ Clubs",
-                mult: "1.5x",
-                color: "text-blue-400",
-              },
-              {
-                level: "Multiverse Event",
-                desc: "2+ Universities",
-                mult: "3x",
-                color: "text-purple-400",
-              },
-              {
-                level: "Sponsored Event",
-                desc: "Club + Brand",
-                mult: "5x",
-                color: "text-orange-400",
-              },
-            ].map((m) => (
-              <div
-                key={m.level}
-                className="flex items-center justify-between p-3 bg-white/5 rounded-2xl border border-white/5"
-              >
-                <div>
-                  <span
-                    className={`block text-xs font-black uppercase tracking-tight ${m.color}`}
-                  >
-                    {m.level}
-                  </span>
-                  <span className="text-[10px] text-gray-500 font-medium">
-                    {m.desc}
-                  </span>
-                </div>
-                <span className="text-xl font-black text-white">{m.mult}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+      {/* Decorative background stardust */}
+      <div className="fixed inset-0 pointer-events-none opacity-20 z-0">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-green-500/10 blur-[120px] rounded-full" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/10 blur-[120px] rounded-full" />
+        <div className="absolute top-1/2 right-1/2 w-[500px] h-[500px] bg-purple-500/5 blur-[150px] rounded-full" />
       </div>
     </div>
   );

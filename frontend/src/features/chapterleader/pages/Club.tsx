@@ -1,4 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useAuth } from "../../../context/AuthContext";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../../store";
+import { useToast } from "../../../context/ToastContext";
 import { IoIosCheckmarkCircle, IoMdFlame } from "react-icons/io";
 import {
   FaGlobeAmericas,
@@ -26,6 +30,38 @@ import planetStarsLottie from "../../../assets/Planet and stars.json";
 import planetLoaderLottie from "../../../assets/Planet laoder.json";
 import redPlanetLottie from "../../../assets/Red Planet.json";
 import rotatingPlanetLottie from "../../../assets/Rotating Planet Loader.json";
+
+export const formatTimeAgo = (dateString?: string | null): string => {
+  if (!dateString) return "Just now";
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  
+  if (diffInSeconds < 60) return `${diffInSeconds} secs ago`;
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) return `${diffInMinutes} mins ago`;
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) return `${diffInHours} hrs ago`;
+  const diffInDays = Math.floor(diffInHours / 24);
+  return `${diffInDays} d ago`;
+};
+
+export const formatTimeUntil = (dateString?: string | null): string => {
+  if (!dateString) return "Soon";
+  const lastUpdate = new Date(dateString);
+  const nextUpdate = new Date(lastUpdate.getTime() + 3 * 60 * 60 * 1000); // 3 hours later
+  const now = new Date();
+  const diffInSeconds = Math.floor((nextUpdate.getTime() - now.getTime()) / 1000);
+  
+  if (diffInSeconds <= 0) return "Any moment now";
+  
+  if (diffInSeconds < 60) return `${diffInSeconds} secs`;
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) return `${diffInMinutes} mins`;
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  const remainingMins = diffInMinutes % 60;
+  return remainingMins > 0 ? `${diffInHours} hrs ${remainingMins} mins` : `${diffInHours} hrs`;
+};
 
 const Starfield = () => {
   const stars = [...Array(450)].map((_, i) => {
@@ -112,10 +148,13 @@ interface Quest {
   badge?: string;
   progress: number;
   total: number;
+  overallProgress?: number;
   isCompleted?: boolean;
   isRewardClaimed?: boolean;
   icon: React.ReactNode;
   lottieData?: any;
+  type?: string;
+  lastUpdatedAt?: string;
 }
 
 interface Stage {
@@ -141,8 +180,12 @@ const ORBIT_THEMES = [
 const DEFAULT_THEME = { stroke: "#22c55e", active: "#4ade80", bg: "rgba(34, 197, 94, 0.2)" };
 
 import { chapterLeaderApi } from "../../../api/chapterLeader";
+import GlobalLoader from "../../../components/GlobalLoader";
 
 const Club: React.FC = () => {
+  const { user, fetchChapterLeaderDetails } = useAuth();
+  const { details } = useSelector((state: RootState) => state.chapterLeader);
+  const { addToast } = useToast();
   const [activeStageIdx, setActiveStageIdx] = useState(0);
   const [hoveredQuestId, setHoveredQuestId] = useState<string | null>(null);
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -152,10 +195,13 @@ const Club: React.FC = () => {
   const [claimingId, setClaimingId] = useState<string | null>(null);
 
   const handleClaimReward = async (questId: string) => {
+    console.log(questId, user?.id);
     try {
       setClaimingId(questId);
-      const res = await chapterLeaderApi.claimQuestReward(questId);
+      const res = await chapterLeaderApi.claimQuestReward(questId, (details?._id || user?.id || (user as any)?._id) as string);
       if (res.data?.success || res.status === 200 || res.status === 201) {
+        addToast("Reward claimed successfully!", "success");
+        await fetchChapterLeaderDetails();
         setStages(prevStages => prevStages.map(stage => ({
           ...stage,
           quests: stage.quests.map(quest => 
@@ -163,8 +209,9 @@ const Club: React.FC = () => {
           )
         })));
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to claim reward:", error);
+      addToast(error.message || "Failed to claim reward", "error");
     } finally {
       setClaimingId(null);
     }
@@ -184,13 +231,21 @@ const Club: React.FC = () => {
                theme: theme,
                quests: o.quests.map((q: any, qIdx: number) => {
 
-                  const currentVal = Array.isArray(q.current) && q.current.length > 0 
-                    ? q.current[0]?.value || 0 
-                    : (typeof q.current === 'number' ? q.current : 0);
-                    
-                  const targetVal = Array.isArray(q.target) && q.target.length > 0 
-                    ? q.target[0] 
-                    : (typeof q.target === 'number' ? q.target : q.numOfEntities || 1);
+                  let currentVal = 0;
+                  let targetVal = 1;
+
+                  if (q.numOfEntities !== undefined && q.numOfEntities >= 1) {
+                    currentVal = Array.isArray(q.current) ? q.current.filter((c: any) => c.isCompleted).length : 0;
+                    targetVal = q.numOfEntities;
+                  } else {
+                    currentVal = Array.isArray(q.current) && q.current.length > 0 
+                      ? q.current[0]?.value || 0 
+                      : (typeof q.current === 'number' ? q.current : 0);
+                      
+                    targetVal = Array.isArray(q.target) && q.target.length > 0 
+                      ? q.target[0] 
+                      : (typeof q.target === 'number' ? q.target : 1);
+                  }
 
                   return {
                     id: q.questId || String(qIdx),
@@ -199,8 +254,11 @@ const Club: React.FC = () => {
                     reward: q.ip ? `+${q.ip} IP` : "+100 IP",
                     progress: currentVal,
                     total: targetVal,
+                    overallProgress: q.overallProgress || 0,
                     isCompleted: q.isCompleted || false,
                     isRewardClaimed: q.isRewardClaimed || false,
+                    type: q.type || 'continuous',
+                    lastUpdatedAt: q.lastUpdatedAt || null,
                     icon: <FaMedal />,
                     lottieData: null
                   };
@@ -232,7 +290,7 @@ const Club: React.FC = () => {
           }
         });
       },
-      { threshold: 0.2, rootMargin: "-100px 0px -40% 0px" },
+      { threshold: 0, rootMargin: "-15% 0px -80% 0px" },
     );
 
     sectionRefs.current.forEach((ref) => {
@@ -245,11 +303,7 @@ const Club: React.FC = () => {
   const currentStage = stages[activeStageIdx] || stages[0];
 
   if (dbLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen text-white bg-[#0c121d] tracking-widest text-sm uppercase">
-        Initializing Orbit...
-      </div>
-    );
+    return <GlobalLoader text="Initializing Orbit..." fullScreen={false} />;
   }
 
   return (
@@ -293,13 +347,14 @@ const Club: React.FC = () => {
             {/* Quests Path */}
             <div className="w-full max-w-4xl flex flex-col items-center gap-24 relative">
               {stage.quests.map((quest, qIdx) => {
-                const isCompleted = quest.isCompleted || quest.progress >= quest.total;
+                const isFullProgress = quest.progress >= quest.total && (quest.overallProgress || 0) >= 100;
+                const isCompleted = quest.isCompleted || isFullProgress;
                 const isEven = qIdx % 2 === 0;
 
                 return (
                   <div
                     key={quest.id}
-                    className="relative mb-52 flex items-center justify-center w-full group"
+                    className={`relative mb-52 flex items-center justify-center w-full group ${hoveredQuestId === quest.id ? "z-[999]" : "z-10"}`}
                   >
                     {/* Curved Dotted Connecting Line (Gapless) */}
                     {qIdx < stage.quests.length - 1 && (
@@ -325,10 +380,13 @@ const Club: React.FC = () => {
 
                     {/* Quest Node Interaction Area (Stationary Parent) */}
                     <div
-                      className="relative z-30 flex items-center justify-center"
+                      className={`relative flex items-center justify-center ${hoveredQuestId === quest.id ? "z-[99]" : "z-30"}`}
                       onMouseEnter={() => setHoveredQuestId(quest.id)}
                       onMouseLeave={() => setHoveredQuestId(null)}
                     >
+                      {/* INVISIBLE HOVER BRIDGE TO PREVENT MOUSELEAVE DROPOUT */}
+                      {hoveredQuestId === quest.id && <div className="absolute w-[500px] h-[200px] z-0" />}
+                      
                       {/* Circle Node (Moves on Hover - Desktop Only) */}
                       <div
                         className={`relative z-20 flex-shrink-0 transition-all duration-700 ease-out cursor-help
@@ -370,11 +428,10 @@ const Club: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* Quest Detail Card (Sliding Reveal) */}
                       <div
                         className={`
-                          absolute z-[100] w-[380px] opacity-0 pointer-events-none 
-                          ${hoveredQuestId === quest.id ? "opacity-100 pointer-events-auto" : ""}
+                          absolute z-[100] w-[380px] 
+                          ${hoveredQuestId === quest.id ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}
                           transition-all duration-700 ease-out
                           left-1/2 -translate-x-1/2 
                           ${
@@ -414,9 +471,15 @@ const Club: React.FC = () => {
                                     }}
                                   />
                                 </div>
-                                <div className="flex justify-between items-center text-[9px] font-bold text-gray-500 uppercase tracking-widest">
-                                  <span>Progress: {quest.progress}/{quest.total}</span>
-                                  <span>{Math.round((quest.progress / quest.total) * 100)}%</span>
+                                <div className="flex justify-between items-center text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-1">
+                                  {quest.type === 'continuous' ? (
+                                    <span>{quest.progress}/{quest.total}</span>
+                                  ) : (
+                                    <>
+                                      <span>Progress: {quest.progress}/{quest.total}</span>
+                                      <span>{Math.round((quest.progress / quest.total) * 100)}%</span>
+                                    </>
+                                  )}
                                 </div>
                               </div>
                             </div>
@@ -442,18 +505,24 @@ const Club: React.FC = () => {
                                     <button 
                                       onClick={(e) => { e.stopPropagation(); handleClaimReward(quest.id); }}
                                       disabled={claimingId === quest.id}
-                                      className="w-full py-1.5 bg-yellow-500 text-black text-[8px] font-black uppercase rounded-lg hover:bg-yellow-400 transition-all active:scale-95"
+                                      className="w-full py-1.5 bg-yellow-500 text-black text-[8px] font-black uppercase rounded-lg hover:bg-yellow-400 transition-all active:scale-95 hover:cursor-pointer"
                                     >
                                       {claimingId === quest.id ? "..." : "Claim"}
                                     </button>
                                   )
                                 ) : (
                                   <div className="py-1.5 bg-white/5 text-gray-500 border border-white/5 text-[8px] font-black uppercase rounded-lg text-center">
-                                    Active
+                                    In Progress
                                   </div>
                                 )}
                               </div>
                             </div>
+                          </div>
+                          
+                          {/* Timestamps Row - Full Width */}
+                          <div className="flex justify-between items-center text-[8px] font-bold  mt-4 pt-3 border-t border-white/5 w-full">
+                            <span className="text-blue-400/80">Last Updated: {formatTimeAgo(quest.lastUpdatedAt)}</span>
+                            <span className="text-purple-400/80">Next Update: {formatTimeUntil(quest.lastUpdatedAt)}</span>
                           </div>
                         </div>
                       </div>

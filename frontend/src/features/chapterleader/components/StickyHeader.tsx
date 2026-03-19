@@ -41,29 +41,8 @@ const StickyHeader: React.FC<StickyHeaderProps> = ({ currentStage, label }) => {
           </div>
         </div>
 
-        {/* Right: Toggle Mode System */}
+        {/* Right: Avatar */}
         <div className="flex items-center gap-6 relative z-10">
-          <div className="flex items-center gap-3">
-            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest hidden sm:block">
-              Explore Mode
-            </span>
-            <div
-              className="w-12 h-6.5 rounded-full p-1 flex items-center transition-all duration-700 cursor-pointer"
-              style={{
-                backgroundColor: currentStage.theme.bg,
-                border: `1px solid ${currentStage.theme.active}30`,
-              }}
-            >
-              <div
-                className="w-4.5 h-4.5 bg-white rounded-full shadow-lg transition-all duration-500"
-                style={{
-                  transform: "translateX(0px)",
-                  boxShadow: `0 0 10px ${currentStage.theme.active}`,
-                }}
-              />
-            </div>
-          </div>
-          {/* Avatar */}
           <div className="w-10 h-10 rounded-xl border border-white/10 overflow-hidden shadow-inner">
             <img
               src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"

@@ -11,7 +11,6 @@ import {
 import { GiCrystalCluster } from "react-icons/gi";
 
 import ProfileWidget from "../../../layout/rightsidebar/ProfileWidget";
-import StatisticWidget from "../../../layout/rightsidebar/StatisticWidget";
 import DailyQuestWidget from "../../../layout/rightsidebar/DailyQuestWidget";
 
 const Profile: React.FC = () => {
@@ -127,9 +126,6 @@ const Profile: React.FC = () => {
           <div className="flex-1 flex flex-col gap-6">
             <div className="w-full">
               <ProfileWidget />
-            </div>
-            <div className="w-full">
-              <StatisticWidget />
             </div>
             <div className="w-full">
               <DailyQuestWidget />
