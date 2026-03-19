@@ -335,8 +335,8 @@ const Club: React.FC = () => {
                           ${
                             hoveredQuestId === quest.id
                               ? isEven
-                                ? "md:-translate-x-[160px]"
-                                : "md:translate-x-[160px]"
+                                ? "md:-translate-x-[120px]"
+                                : "md:translate-x-[120px]"
                               : ""
                           }
                         `}
@@ -373,88 +373,86 @@ const Club: React.FC = () => {
                       {/* Quest Detail Card (Sliding Reveal) */}
                       <div
                         className={`
-                          absolute z-[100] w-[min(350px,90vw)] opacity-0 pointer-events-none 
+                          absolute z-[100] w-[380px] opacity-0 pointer-events-none 
                           ${hoveredQuestId === quest.id ? "opacity-100 pointer-events-auto" : ""}
                           transition-all duration-700 ease-out
-                          ${isEven ? "md:left-1/2 md:ml-[-40px]" : "md:right-1/2 md:mr-[-40px]"}
-                          left-1/2 -translate-x-1/2 md:translate-x-0
+                          left-1/2 -translate-x-1/2 
+                          ${
+                            hoveredQuestId === quest.id
+                              ? isEven
+                                ? "md:translate-x-[calc(-50%+180px)]"
+                                : "md:translate-x-[calc(-50%-180px)]"
+                              : "md:translate-x-[-50%]"
+                          }
                           top-1/2 -translate-y-1/2
                         `}
                       >
-                        <div className="bg-[#0c121d] border-2 border-white/10 rounded-[2rem] p-5 sm:p-6 shadow-[0_40px_80px_rgba(0,0,0,0.8)] relative">
-                          {/* Triangle Pointer - Hidden on Mobile */}
-                          <div
-                            className={`hidden md:block absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-[#0c121d] border-l-2 border-b-2 border-white/10 rotate-45
-                            ${isEven ? "-left-[7px]" : "left-auto -right-[7px] rotate-[225deg]"}
-                          `}
-                          />
-
-                          <div className="flex items-center gap-4 mb-2 text-left">
-                            <span className="text-white font-black text-base uppercase tracking-tight">
-                              {quest.name}
-                            </span>
-                            {isCompleted && (
-                              <IoIosCheckmarkCircle className="text-green-500 text-lg" />
-                            )}
-                          </div>
-                          <p className="text-gray-400 text-[13px] leading-relaxed mb-4 text-left">
-                            {quest.task}
-                          </p>
-
-                          {/* Progress Stats */}
-                          <div className="flex flex-col gap-2 items-start">
-                            <div className="flex items-center justify-between w-full">
-                              <span className="text-gray-500 font-bold text-[10px] uppercase tracking-wider">
-                                Progress
-                              </span>
-                              <span className="text-white font-black text-xs">
-                                {quest.progress} / {quest.total}
-                              </span>
-                            </div>
-                            <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden mt-1">
-                              <div
-                                className="h-full transition-all duration-1000"
-                                style={{
-                                  width: `${Math.min((quest.progress / quest.total) * 100, 100)}%`,
-                                  backgroundColor: isCompleted
-                                    ? stage.theme.stroke
-                                    : stage.theme.active,
-                                }}
-                              />
-                            </div>
-                          </div>
-
-                          {/* Reward Badge */}
-                          <div className="mt-6 pt-6 border-t border-white/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                            <div className="flex flex-col text-left">
-                              <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">
-                                Reward
-                              </span>
-                              <span className="text-yellow-400 font-black text-sm">
-                                {quest.reward}
-                              </span>
-                            </div>
-                            
-                            <div className="shrink-0 flex items-center justify-center pointer-events-auto z-10">
-                              {isCompleted ? (
-                                quest.isRewardClaimed ? (
-                                  <div className="px-5 py-2.5 bg-green-500/20 text-green-400 border border-green-500/30 text-[11px] font-black uppercase rounded-xl shadow-lg flex items-center justify-center gap-1.5 min-w-[100px]">
-                                    <IoIosCheckmarkCircle className="text-sm" /> Claimed
-                                  </div>
-                                ) : (
-                                  <button 
-                                    onClick={(e) => { e.stopPropagation(); handleClaimReward(quest.id); }}
-                                    disabled={claimingId === quest.id}
-                                    className="px-6 py-2.5 bg-yellow-500 hover:bg-yellow-400 text-black text-[11px] font-black uppercase rounded-xl transition-all shadow-lg active:scale-95 disabled:opacity-50 min-w-[100px]"
-                                  >
-                                    {claimingId === quest.id ? "..." : "Claim IP"}
-                                  </button>
-                                )
-                              ) : (
-                                <div className="px-5 py-2.5 bg-white/5 text-gray-400 border border-white/10 text-[11px] font-black uppercase rounded-xl shadow-none min-w-[100px] text-center">
-                                  In Progress
+                        <div className="bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-[0_30px_60px_rgba(0,0,0,0.6)] relative overflow-visible">
+                          <div className="flex gap-4 items-start w-full relative z-10">
+                            {/* Left Column: Info & Progress Bar */}
+                            <div className="flex-1 flex flex-col gap-2 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="text-white font-bold text-sm uppercase tracking-tight truncate">
+                                  {quest.name}
+                                </span>
+                                {isCompleted && (
+                                  <IoIosCheckmarkCircle className="text-green-500 text-sm shrink-0" />
+                                )}
+                              </div>
+                              <p className="text-gray-400 text-[11px] leading-snug line-clamp-2">
+                                {quest.task}
+                              </p>
+                              
+                              <div className="mt-1 w-full flex flex-col gap-1.5">
+                                <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                                  <div
+                                    className="h-full transition-all duration-1000"
+                                    style={{
+                                      width: `${Math.min((quest.progress / quest.total) * 100, 100)}%`,
+                                      backgroundColor: isCompleted ? stage.theme.stroke : stage.theme.active,
+                                      boxShadow: `0 0 10px ${isCompleted ? stage.theme.stroke : stage.theme.active}`,
+                                    }}
+                                  />
                                 </div>
-                              )}
+                                <div className="flex justify-between items-center text-[9px] font-bold text-gray-500 uppercase tracking-widest">
+                                  <span>Progress: {quest.progress}/{quest.total}</span>
+                                  <span>{Math.round((quest.progress / quest.total) * 100)}%</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Right Column: Reward & Action */}
+                            <div className="w-[100px] shrink-0 flex flex-col items-center justify-between gap-3 pt-1 border-l border-white/5 pl-4">
+                              <div className="flex flex-col items-center text-center">
+                                <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest mb-0.5">
+                                  Reward
+                                </span>
+                                <span className="text-yellow-400 font-black text-sm">
+                                  {quest.reward}
+                                </span>
+                              </div>
+                              
+                              <div className="w-full">
+                                {isCompleted ? (
+                                  quest.isRewardClaimed ? (
+                                    <div className="py-1.5 bg-green-500/10 text-green-400 border border-green-500/20 text-[8px] font-black uppercase rounded-lg text-center">
+                                      Claimed
+                                    </div>
+                                  ) : (
+                                    <button 
+                                      onClick={(e) => { e.stopPropagation(); handleClaimReward(quest.id); }}
+                                      disabled={claimingId === quest.id}
+                                      className="w-full py-1.5 bg-yellow-500 text-black text-[8px] font-black uppercase rounded-lg hover:bg-yellow-400 transition-all active:scale-95"
+                                    >
+                                      {claimingId === quest.id ? "..." : "Claim"}
+                                    </button>
+                                  )
+                                ) : (
+                                  <div className="py-1.5 bg-white/5 text-gray-500 border border-white/5 text-[8px] font-black uppercase rounded-lg text-center">
+                                    Active
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </div>
