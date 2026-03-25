@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { IoMdSettings, IoMdTrendingUp, IoMdRocket } from "react-icons/io";
 import {
   FaGraduationCap,
@@ -7,13 +7,132 @@ import {
   FaMedal,
   FaBell,
   FaCheckCircle,
+  FaPlus,
+  FaTrash,
+  FaEdit,
+  FaMapMarkerAlt,
 } from "react-icons/fa";
 import { GiCrystalCluster } from "react-icons/gi";
 
 import ProfileWidget from "../../../layout/rightsidebar/ProfileWidget";
 import DailyQuestWidget from "../../../layout/rightsidebar/DailyQuestWidget";
+import { chapterLeaderApi } from "../../../api/chapterLeader";
+import { useToast } from "../../../context/ToastContext";
+
+interface Address {
+  _id?: string;
+  name: string;
+  phone: string;
+  addressLine1: string;
+  addressLine2?: string;
+  city: string;
+  state: string;
+  zip: string;
+  country: string;
+}
+
+interface Leader {
+  name: string;
+  email: string;
+  totalIpEarned: number;
+  address: Address[];
+}
 
 const Profile: React.FC = () => {
+  const { addToast } = useToast();
+  const [leader, setLeader] = useState<Leader | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+  const [editingAddress, setEditingAddress] = useState<Address | null>(null);
+  const [addressForm, setAddressForm] = useState<Address>({
+    name: "",
+    phone: "",
+    addressLine1: "",
+    addressLine2: "",
+    city: "",
+    state: "",
+    zip: "",
+    country: "India",
+  });
+
+  const fetchLeaderDetails = async () => {
+    try {
+      setLoading(true);
+      const res = await chapterLeaderApi.getChapterleaderDetails();
+      if (res.data.success) {
+        setLeader(res.data.chapterLeader);
+      }
+    } catch (error) {
+      console.error("Error fetching leader details:", error);
+      addToast("Failed to load profile", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLeaderDetails();
+  }, []);
+
+  const handleAddressSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (editingAddress?._id) {
+        const res = await chapterLeaderApi.updateAddress(editingAddress._id, addressForm);
+        if (res.data.success) {
+          addToast("Address updated successfully", "success");
+        }
+      } else {
+        const res = await chapterLeaderApi.addAddress(addressForm);
+        if (res.data.success) {
+          addToast("Address added successfully", "success");
+        }
+      }
+      setIsAddressModalOpen(false);
+      setEditingAddress(null);
+      setAddressForm({
+        name: "",
+        phone: "",
+        addressLine1: "",
+        addressLine2: "",
+        city: "",
+        state: "",
+        zip: "",
+        country: "India",
+      });
+      fetchLeaderDetails();
+    } catch (error: any) {
+      addToast(error.response?.data?.message || "Something went wrong", "error");
+    }
+  };
+
+  const handleDeleteAddress = async (addressId: string) => {
+    if (!window.confirm("Are you sure you want to delete this address?")) return;
+    try {
+      const res = await chapterLeaderApi.deleteAddress(addressId);
+      if (res.data.success) {
+        addToast("Address deleted successfully", "success");
+        fetchLeaderDetails();
+      }
+    } catch (error) {
+      addToast("Failed to delete address", "error");
+    }
+  };
+
+  const openEditModal = (addr: Address) => {
+    setEditingAddress(addr);
+    setAddressForm(addr);
+    setIsAddressModalOpen(true);
+  };
+
+  if (loading || !leader) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#070b14] text-white">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col items-center min-h-screen text-white w-full relative bg-[#070b14] p-6 md:p-14 ">
       {/* Professional Top Gradient */}
@@ -36,7 +155,7 @@ const Profile: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
                   <span className="text-[10px] font-black text-white uppercase tracking-[0.2em] whitespace-nowrap">
-                    Elite Node
+                    Active Leader
                   </span>
                 </div>
               </div>
@@ -65,20 +184,13 @@ const Profile: React.FC = () => {
               </div>
 
               <h1 className="text-4xl xl:text-5xl font-black tracking-tight mb-5 text-white">
-                Felix Multiverse
+                {leader.name}
               </h1>
 
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-8">
                 <div className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl">
-                  <FaGraduationCap className="text-slate-400 text-sm" />
                   <span className="text-[11px] font-bold text-slate-300">
-                    Stanford Graduate
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl">
-                  <FaGlobeAmericas className="text-slate-400 text-sm" />
-                  <span className="text-[11px] font-bold text-slate-300">
-                    Global Node
+                    {leader.email}
                   </span>
                 </div>
               </div>
@@ -93,18 +205,18 @@ const Profile: React.FC = () => {
                 <div className="flex items-center gap-2 text-blue-400">
                   <GiCrystalCluster className="text-xl shrink-0" />
                   <span className="text-xl xl:text-2xl font-black text-white whitespace-nowrap leading-none">
-                    12,850
+                    {leader.totalIpEarned.toLocaleString()}
                   </span>
                 </div>
               </div>
               <div className="flex flex-col items-center md:items-start group cursor-default">
                 <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-3 group-hover:text-slate-300 transition-colors">
-                  Affiliations
+                  Addresses
                 </span>
                 <div className="flex items-center gap-2 text-slate-400">
-                  <FaUsers className="text-xl shrink-0" />
+                  <FaMapMarkerAlt className="text-xl shrink-0" />
                   <span className="text-xl xl:text-2xl font-black text-white whitespace-nowrap leading-none">
-                    24
+                    {leader.address.length}
                   </span>
                 </div>
               </div>
@@ -137,6 +249,59 @@ const Profile: React.FC = () => {
       <div className="w-full lg:max-w-[1700px] grid grid-cols-1 lg:grid-cols-12 gap-8 px-6 pb-32 relative z-10 mt-16">
         {/* Main Content Area */}
         <div className="lg:col-span-8 flex flex-col gap-10">
+          
+          {/* Address Management Section */}
+          <div className="bg-[#0c121d] border border-white/5 rounded-2xl p-8">
+             <div className="flex items-center justify-between mb-10">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-blue-600/10 border border-blue-600/20 flex items-center justify-center">
+                    <FaMapMarkerAlt className="text-blue-500" />
+                  </div>
+                  <h2 className="text-lg font-black uppercase tracking-tight">
+                    Shipping Addresses
+                  </h2>
+                </div>
+                <button 
+                  onClick={() => { setIsAddressModalOpen(true); setEditingAddress(null); }}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black uppercase tracking-widest rounded-lg transition-all"
+                >
+                  <FaPlus /> Add New
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {leader.address.map((addr) => (
+                  <div key={addr._id} className="p-6 bg-black/40 border border-white/5 rounded-2xl hover:border-blue-500/30 transition-all group relative">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h4 className="text-sm font-black text-white uppercase tracking-tight">{addr.name}</h4>
+                        <p className="text-[11px] text-slate-500 font-bold">{addr.phone}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button onClick={() => openEditModal(addr)} className="p-2 bg-white/5 hover:bg-blue-600/20 rounded-lg text-slate-400 hover:text-blue-500 transition-all">
+                          <FaEdit size={14} />
+                        </button>
+                        <button onClick={() => handleDeleteAddress(addr._id!)} className="p-2 bg-white/5 hover:bg-red-600/20 rounded-lg text-slate-400 hover:text-red-500 transition-all">
+                          <FaTrash size={14} />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="text-[12px] text-slate-400 leading-relaxed font-medium">
+                      {addr.addressLine1}{addr.addressLine2 ? `, ${addr.addressLine2}` : ""}<br />
+                      {addr.city}, {addr.state} - {addr.zip}<br />
+                      {addr.country}
+                    </div>
+                  </div>
+                ))}
+                {leader.address.length === 0 && (
+                  <div className="col-span-full border-2 border-dashed border-white/5 rounded-2xl p-12 flex flex-col items-center justify-center text-slate-500">
+                    <FaMapMarkerAlt className="text-4xl mb-4 opacity-20" />
+                    <p className="text-[11px] font-black uppercase tracking-[0.2em]">No addresses configured</p>
+                  </div>
+                )}
+              </div>
+          </div>
+
           {/* Verified Credentials Section */}
           <div className="bg-[#0c121d] border border-white/5 rounded-2xl p-8 overflow-hidden relative">
             <div className="flex items-center justify-between mb-10">
@@ -148,9 +313,6 @@ const Profile: React.FC = () => {
                   Verified Credentials
                 </h2>
               </div>
-              <button className="text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:text-white transition-colors">
-                Audit History
-              </button>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -161,19 +323,9 @@ const Profile: React.FC = () => {
                   icon: <IoMdRocket />,
                 },
                 {
-                  name: "Data Architect",
-                  level: "Senior",
+                  name: "Active Node",
+                  level: "Standard",
                   icon: <GiCrystalCluster />,
-                },
-                {
-                  name: "Global Scout",
-                  level: "Advanced",
-                  icon: <FaGlobeAmericas />,
-                },
-                {
-                  name: "Top Contributor",
-                  level: "Expert",
-                  icon: <FaUsers />,
                 },
               ].map((badge) => (
                 <div
@@ -193,79 +345,12 @@ const Profile: React.FC = () => {
               ))}
             </div>
           </div>
-
-          {/* Analytical Performance Graph placeholder */}
-          <div className="bg-[#0c121d] border border-white/5 rounded-2xl p-8">
-            <div className="flex items-center justify-between mb-10">
-              <h2 className="text-lg font-black uppercase tracking-tight">
-                Impact Analysis
-              </h2>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />{" "}
-                  <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
-                    Active
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-slate-700" />{" "}
-                  <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
-                    Baseline
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className="h-64 flex items-end justify-between gap-6 px-2">
-              {[35, 62, 48, 85, 55, 78, 92, 65, 70, 88].map((h, i) => (
-                <div
-                  key={i}
-                  className="flex-1 flex flex-col items-center gap-4"
-                >
-                  <div
-                    className="w-full bg-slate-800/40 rounded-t-sm relative group cursor-pointer"
-                    style={{ height: `${h}%` }}
-                  >
-                    <div
-                      className="absolute bottom-0 left-0 w-full bg-blue-600 transition-all duration-700 rounded-t-sm"
-                      style={{ height: `${h * 0.9}%` }}
-                    />
-                    {/* Hover Tooltip Overlay */}
-                    <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-blue-600 text-[10px] font-black px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity z-20 shadow-xl">
-                      {h}%
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="w-full flex justify-between mt-6 px-1">
-              {[
-                "JAN",
-                "FEB",
-                "MAR",
-                "APR",
-                "MAY",
-                "JUN",
-                "JUL",
-                "AUG",
-                "SEP",
-                "OCT",
-              ].map((m) => (
-                <span
-                  key={m}
-                  className="text-[8px] font-bold text-slate-600 tracking-widest uppercase"
-                >
-                  {m}
-                </span>
-              ))}
-            </div>
-          </div>
         </div>
 
         {/* Sidebar Insights */}
         <div className="xl:col-span-4 flex flex-col gap-8">
           {/* Status Card */}
           <div className="bg-[#0c121d] border border-white/5 rounded-2xl p-8 relative overflow-hidden group">
-            {/* Subtle Blue Glow Overlay */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/5 blur-3xl pointer-events-none" />
 
             <h2 className="text-base font-black uppercase tracking-widest text-white mb-8 flex items-center justify-between">
@@ -280,22 +365,10 @@ const Profile: React.FC = () => {
             <div className="flex flex-col gap-7">
               {[
                 {
-                  node: "Galaxy Colonization",
-                  status: "In Progress",
-                  prog: 84,
-                  active: true,
-                },
-                {
-                  node: "Protocol Sync",
-                  status: "Queued",
-                  prog: 32,
-                  active: false,
-                },
-                {
-                  node: "Network Expansion",
+                  node: "Account Security",
                   status: "Verified",
                   prog: 100,
-                  active: false,
+                  active: true,
                 },
               ].map((s) => (
                 <div key={s.node} className="flex flex-col gap-3">
@@ -314,62 +387,121 @@ const Profile: React.FC = () => {
                 </div>
               ))}
             </div>
-
-            <button className="w-full mt-10 py-4 bg-blue-600 hover:bg-blue-500 transition-all border border-blue-400/20 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-[0_12px_24px_-8px_rgba(37,99,235,0.3)] active:scale-95">
-              Request Node Upgrade
-            </button>
-          </div>
-
-          {/* Profile Quote / Narrative */}
-          <div className="bg-[#0c121d] border border-white/5 rounded-2xl p-8">
-            <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4">
-              Official Narrative
-            </h2>
-            <p className="text-slate-300 text-xs leading-relaxed font-medium">
-              "Developing high-reliability AI infrastructures to optimize
-              cross-functional communication within global interest sectors."
-            </p>
-            <div className="mt-8 pt-8 border-t border-white/5 flex items-center justify-between">
-              <div>
-                <span className="text-xl font-black text-white">1,240</span>
-                <span className="block text-[8px] font-bold text-slate-500 uppercase tracking-widest mt-1">
-                  Global Node Follows
-                </span>
-              </div>
-              <div className="flex -space-x-3">
-                {[1, 2, 3, 4].map((i) => (
-                  <div
-                    key={i}
-                    className="w-8 h-8 rounded-full border border-[#070b14] overflow-hidden bg-slate-800"
-                  >
-                    <img
-                      src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${i + 25}`}
-                      alt="follower"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-[#0c121d] to-black border border-white/5 rounded-2xl p-5 flex items-center justify-between group cursor-pointer hover:border-blue-600/30 transition-all">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-lg bg-blue-600/10 flex items-center justify-center text-blue-500">
-                <FaBell />
-              </div>
-              <div>
-                <span className="block text-[10px] font-black uppercase tracking-widest text-white">
-                  Notifications
-                </span>
-                <span className="block text-[8px] font-bold text-slate-500 uppercase tracking-widest">
-                  3 New Signals
-                </span>
-              </div>
-            </div>
-            <div className="w-2 h-2 rounded-full bg-blue-500" />
           </div>
         </div>
       </div>
+
+      {/* Address Modal */}
+      {isAddressModalOpen && (
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center p-6 backdrop-blur-md bg-black/60">
+          <div className="bg-[#0c121d] border border-white/10 rounded-3xl w-full max-w-xl p-8 shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-[150px] bg-gradient-to-b from-blue-600/10 to-transparent pointer-events-none" />
+            
+            <h2 className="text-2xl font-black text-white uppercase tracking-tight mb-8 relative z-10">
+              {editingAddress ? "Update Address" : "Add New Address"}
+            </h2>
+
+            <form onSubmit={handleAddressSubmit} className="space-y-6 relative z-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Full Name</label>
+                  <input 
+                    required 
+                    type="text" 
+                    value={addressForm.name} 
+                    onChange={(e) => setAddressForm({...addressForm, name: e.target.value})}
+                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none transition-all" 
+                    placeholder="Recipient Name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Phone Number</label>
+                  <input 
+                    required 
+                    type="text" 
+                    value={addressForm.phone} 
+                    onChange={(e) => setAddressForm({...addressForm, phone: e.target.value})}
+                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none transition-all" 
+                    placeholder="+91 00000 00000"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Address Line 1</label>
+                <input 
+                  required 
+                  type="text" 
+                  value={addressForm.addressLine1} 
+                  onChange={(e) => setAddressForm({...addressForm, addressLine1: e.target.value})}
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none transition-all" 
+                  placeholder="Street, Building, etc."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Address Line 2 (Optional)</label>
+                <input 
+                  type="text" 
+                  value={addressForm.addressLine2} 
+                  onChange={(e) => setAddressForm({...addressForm, addressLine2: e.target.value})}
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none transition-all" 
+                  placeholder="Appt, Suite, Landmark"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">City</label>
+                  <input 
+                    required 
+                    type="text" 
+                    value={addressForm.city} 
+                    onChange={(e) => setAddressForm({...addressForm, city: e.target.value})}
+                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none transition-all" 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">State</label>
+                  <input 
+                    required 
+                    type="text" 
+                    value={addressForm.state} 
+                    onChange={(e) => setAddressForm({...addressForm, state: e.target.value})}
+                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none transition-all" 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">ZIP</label>
+                  <input 
+                    required 
+                    type="text" 
+                    value={addressForm.zip} 
+                    onChange={(e) => setAddressForm({...addressForm, zip: e.target.value})}
+                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none transition-all" 
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-4 pt-4">
+                <button 
+                  type="button"
+                  onClick={() => setIsAddressModalOpen(false)}
+                  className="flex-1 px-8 py-3.5 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  className="flex-1 px-8 py-3.5 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg"
+                >
+                  Save Address
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
