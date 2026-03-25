@@ -3,18 +3,8 @@ import { useAuth } from "../../../context/AuthContext";
 import { useToast } from "../../../context/ToastContext";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../../store";
-import { IoIosCheckmarkCircle, IoMdFlame } from "react-icons/io";
+import { IoIosCheckmarkCircle } from "react-icons/io";
 import {
-  FaGlobeAmericas,
-  FaComments,
-  FaUsers,
-  FaChartLine,
-  FaProjectDiagram,
-  FaUserTie,
-  FaPassport,
-  FaMoneyBillWave,
-  FaTicketAlt,
-  FaHandshake,
   FaMedal,
   FaCrown,
 } from "react-icons/fa";
@@ -24,12 +14,12 @@ import image from "../../../assets/image.png";
 import StickyHeader from "../components/StickyHeader";
 
 // Lottie Animations
-import earthLottie from "../../../assets/Earth globe rotating with Seamless loop animation.json";
-import planetOrbitLottie from "../../../assets/Planet Orbit.json";
-import planetStarsLottie from "../../../assets/Planet and stars.json";
-import planetLoaderLottie from "../../../assets/Planet laoder.json";
-import redPlanetLottie from "../../../assets/Red Planet.json";
-import rotatingPlanetLottie from "../../../assets/Rotating Planet Loader.json";
+import earthLottie from "../../../assets/Earth_Animation.json";
+import planetOrbitLottie from "../../../assets/Planet_Orbit.json";
+import planetStarsLottie from "../../../assets/Planet_Stars.json";
+import planetLoaderLottie from "../../../assets/Plant_Loader.json";
+import redPlanetLottie from "../../../assets/Red_Planet.json";
+import rotatingPlanetLottie from "../../../assets/Rotating_Planet_Loader.json";
 
 export const formatTimeAgo = (dateString?: string | null): string => {
   if (!dateString) return "Just now";
@@ -218,7 +208,7 @@ const Members: React.FC = () => {
   useEffect(() => {
     const fetchProgress = async () => {
       try {
-        const res = await chapterLeaderApi.getQuestsProgress('members');
+        const res = await chapterLeaderApi.getQuestsProgress('Member');
         console.log(res)
         if (res.data?.success && res.data.data?.orbits) {
           const mappedStages = res.data.data.orbits.map((o: any, index: number) => {
@@ -228,21 +218,16 @@ const Members: React.FC = () => {
                objective: o.orbit?.description || o.orbit?.subTitle || "",
                theme: theme,
                quests: o.quests.map((q: any, qIdx: number) => {
-
+                  const type = q.type || "continuous";
                   let currentVal = 0;
                   let targetVal = 1;
 
-                  if (q.numOfEntities !== undefined && q.numOfEntities >= 1) {
-                    currentVal = Array.isArray(q.current) ? q.current.filter((c: any) => c.isCompleted).length : 0;
-                    targetVal = q.numOfEntities;
+                  if (type === "continuous") {
+                    currentVal = q.overallProgress || 0;
+                    targetVal = 100;
                   } else {
-                    currentVal = Array.isArray(q.current) && q.current.length > 0 
-                      ? q.current[0]?.value || 0 
-                      : (typeof q.current === 'number' ? q.current : 0);
-                      
-                    targetVal = Array.isArray(q.target) && q.target.length > 0 
-                      ? q.target[0] 
-                      : (typeof q.target === 'number' ? q.target : 1);
+                    currentVal = q.value || 0;
+                    targetVal = q.entityLimit || 1;
                   }
 
                   return {
@@ -302,6 +287,32 @@ const Members: React.FC = () => {
 
   if (dbLoading) {
     return <GlobalLoader text="Initializing Orbit..." fullScreen={false} />;
+  }
+
+  if (stages.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen text-white w-full relative">
+        <Starfield />
+        <StickyHeader currentStage={undefined as any} label="Members Guild" />
+        <div className="flex-1 flex flex-col items-center justify-center px-6 relative z-10 text-center">
+          <div className="w-24 h-24 mb-8 bg-white/5 rounded-full flex items-center justify-center border border-white/10 animate-pulse">
+            <GiGalaxy className="text-5xl text-gray-500" />
+          </div>
+          <h2 className="text-3xl font-black uppercase tracking-tighter mb-4 text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500">
+            Deep Space Silence
+          </h2>
+          <p className="max-w-md text-gray-400 text-lg font-medium italic">
+            "No member orbits have been established yet. We're currently aligning the stars for your next recruitment drive."
+          </p>
+          <div className="mt-12 flex flex-col items-center gap-4">
+            <div className="h-px w-24 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+            <span className="text-[10px] font-black tracking-[0.4em] text-gray-600 uppercase">
+              Awaiting neural link activation
+            </span>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -470,12 +481,14 @@ const Members: React.FC = () => {
                                   />
                                 </div>
                                 <div className="flex justify-between items-center text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-1">
-                                  {quest.type === 'continuous' ? (
-                                    <span>{quest.progress}/{quest.total}</span>
+                                  {quest.type === "continuous" ? (
+                                    <span>{quest.overallProgress}%</span>
                                   ) : (
                                     <>
-                                      <span>Progress: {quest.progress}/{quest.total}</span>
-                                      <span>{Math.round((quest.progress / quest.total) * 100)}%</span>
+                                      <span>
+                                        Progress: {quest.progress}/{quest.total}
+                                      </span>
+                                      <span>{quest.overallProgress}%</span>
                                     </>
                                   )}
                                 </div>

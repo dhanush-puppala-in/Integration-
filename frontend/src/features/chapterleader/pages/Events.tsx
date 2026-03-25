@@ -3,33 +3,12 @@ import { useAuth } from "../../../context/AuthContext";
 import { useToast } from "../../../context/ToastContext";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../../store";
-import { IoIosCheckmarkCircle, IoMdFlame } from "react-icons/io";
-import {
-  FaGlobeAmericas,
-  FaComments,
-  FaUsers,
-  FaChartLine,
-  FaProjectDiagram,
-  FaUserTie,
-  FaPassport,
-  FaMoneyBillWave,
-  FaTicketAlt,
-  FaHandshake,
-  FaMedal,
-  FaCrown,
-} from "react-icons/fa";
-import { GiGalaxy } from "react-icons/gi";
+import { IoIosCheckmarkCircle, IoIosRocket } from "react-icons/io";
+
 import CircularProgress from "../components/CircularProgress";
 import image from "../../../assets/image.png";
 import StickyHeader from "../components/StickyHeader";
 
-// Lottie Animations
-import earthLottie from "../../../assets/Earth globe rotating with Seamless loop animation.json";
-import planetOrbitLottie from "../../../assets/Planet Orbit.json";
-import planetStarsLottie from "../../../assets/Planet and stars.json";
-import planetLoaderLottie from "../../../assets/Planet laoder.json";
-import redPlanetLottie from "../../../assets/Red Planet.json";
-import rotatingPlanetLottie from "../../../assets/Rotating Planet Loader.json";
 
 export const formatTimeAgo = (dateString?: string | null): string => {
   if (!dateString) return "Just now";
@@ -181,6 +160,7 @@ const DEFAULT_THEME = { stroke: "#22c55e", active: "#4ade80", bg: "rgba(34, 197,
 
 import { chapterLeaderApi } from "../../../api/chapterLeader";
 import GlobalLoader from "../../../components/GlobalLoader";
+import { FaMedal } from "react-icons/fa";
 
 const Events: React.FC = () => {
   const { user, fetchChapterLeaderDetails } = useAuth();
@@ -218,7 +198,7 @@ const Events: React.FC = () => {
   useEffect(() => {
     const fetchProgress = async () => {
       try {
-        const res = await chapterLeaderApi.getQuestsProgress('events');
+        const res = await chapterLeaderApi.getQuestsProgress('Event');
         console.log(res)
         if (res.data?.success && res.data.data?.orbits) {
           const mappedStages = res.data.data.orbits.map((o: any, index: number) => {
@@ -227,22 +207,17 @@ const Events: React.FC = () => {
                title: o.orbit?.title || `Orbit ${o.orbit?.id || index + 1}`,
                objective: o.orbit?.description || o.orbit?.subTitle || "",
                theme: theme,
-               quests: o.quests.map((q: any, qIdx: number) => {
-
+                quests: o.quests.map((q: any, qIdx: number) => {
+                  const type = q.type || "continuous";
                   let currentVal = 0;
                   let targetVal = 1;
 
-                  if (q.numOfEntities !== undefined && q.numOfEntities >= 1) {
-                    currentVal = Array.isArray(q.current) ? q.current.filter((c: any) => c.isCompleted).length : 0;
-                    targetVal = q.numOfEntities;
+                  if (type === "continuous") {
+                    currentVal = q.overallProgress || 0;
+                    targetVal = 100;
                   } else {
-                    currentVal = Array.isArray(q.current) && q.current.length > 0 
-                      ? q.current[0]?.value || 0 
-                      : (typeof q.current === 'number' ? q.current : 0);
-                      
-                    targetVal = Array.isArray(q.target) && q.target.length > 0 
-                      ? q.target[0] 
-                      : (typeof q.target === 'number' ? q.target : 1);
+                    currentVal = q.value || 0;
+                    targetVal = q.entityLimit || 1;
                   }
 
                   return {
@@ -302,6 +277,32 @@ const Events: React.FC = () => {
 
   if (dbLoading) {
     return <GlobalLoader text="Initializing Orbit..." fullScreen={false} />;
+  }
+
+  if (stages.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen text-white w-full relative">
+        <Starfield />
+        <StickyHeader currentStage={undefined as any} label="Events Guild" />
+        <div className="flex-1 flex flex-col items-center justify-center px-6 relative z-10 text-center">
+          <div className="w-24 h-24 mb-8 bg-white/5 rounded-full flex items-center justify-center border border-white/10 animate-pulse">
+            <IoIosRocket className="text-5xl text-gray-500" />
+          </div>
+          <h2 className="text-3xl font-black uppercase tracking-tighter mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
+            The Galaxy is Quiet
+          </h2>
+          <p className="max-w-md text-gray-400 text-lg font-medium italic">
+            "No orbits have been discovered in this sector yet. Our cosmic scouts are currently mapping out new missions for your guild."
+          </p>
+          <div className="mt-12 flex flex-col items-center gap-4">
+            <div className="h-px w-24 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+            <span className="text-[10px] font-black tracking-[0.4em] text-gray-600 uppercase">
+              Check back soon for new missions
+            </span>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -470,12 +471,14 @@ const Events: React.FC = () => {
                                   />
                                 </div>
                                 <div className="flex justify-between items-center text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-1">
-                                  {quest.type === 'continuous' ? (
-                                    <span>{quest.progress}/{quest.total}</span>
+                                  {quest.type === "continuous" ? (
+                                    <span>{quest.overallProgress}%</span>
                                   ) : (
                                     <>
-                                      <span>Progress: {quest.progress}/{quest.total}</span>
-                                      <span>{Math.round((quest.progress / quest.total) * 100)}%</span>
+                                      <span>
+                                        Progress: {quest.progress}/{quest.total}
+                                      </span>
+                                      <span>{quest.overallProgress}%</span>
                                     </>
                                   )}
                                 </div>

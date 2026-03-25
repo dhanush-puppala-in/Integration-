@@ -21,14 +21,14 @@ const StickyHeader: React.FC<StickyHeaderProps> = ({ currentStage, label }) => {
           <div
             className="w-11 h-11 rounded-2xl flex items-center justify-center border transition-all duration-700 shadow-lg"
             style={{
-              backgroundColor: currentStage.theme.bg,
-              borderColor: `${currentStage.theme.active}40`,
-              boxShadow: `0 0 20px ${currentStage.theme.active}20`,
+              backgroundColor: currentStage?.theme?.bg || "rgba(255, 255, 255, 0.05)",
+              borderColor: currentStage?.theme?.active ? `${currentStage.theme.active}40` : "rgba(255, 255, 255, 0.1)",
+              boxShadow: currentStage?.theme?.active ? `0 0 20px ${currentStage.theme.active}20` : "none",
             }}
           >
             <IoIosRocket
               className="text-2xl transition-all duration-700"
-              style={{ color: currentStage.theme.active }}
+              style={{ color: currentStage?.theme?.active || "#94a3b8" }}
             />
           </div>
           <div>
@@ -36,7 +36,7 @@ const StickyHeader: React.FC<StickyHeaderProps> = ({ currentStage, label }) => {
               {label}
             </p>
             <h1 className="text-lg font-black uppercase tracking-tighter text-white">
-              {currentStage.title}
+              {currentStage?.title || "No Active Orbit"}
             </h1>
           </div>
         </div>

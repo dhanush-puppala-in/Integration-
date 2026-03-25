@@ -10,7 +10,7 @@ export const authApi = {
   },
   
   forgotPassword: async (data: { email: string }) => {
-    return await axiosInstance.post('/chapterLeader/forgot-password', data);
+    return await axiosInstance.post('/chapterLeader/forgotPassword', data);
   },
 
   resetPassword: async (token: string, data: { password: string }) => {
