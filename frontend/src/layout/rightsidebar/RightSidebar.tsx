@@ -1,7 +1,7 @@
 import React from "react";
 import ProfileWidget from "./ProfileWidget";
 import StatisticWidget from "./StatisticWidget";
-import DailyQuestWidget from "./DailyQuestWidget";
+import TopQuestsWidget from "./TopQuestsWidget";
 import { useAuth } from "../../context/AuthContext";
 import { ROLES } from "../../utils/constants";
 
@@ -28,13 +28,12 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
         {/* Statistics - Only for Admin Role */}
         {!isChapterLeader && <StatisticWidget />}
 
-        {/* Quests and View More - Only for Chapter Leader Role
-        {isChapterLeader && (
-            <DailyQuestWidget />
-        )} */}
+        {/* Top Quests about to complete - Chapter Leader */}
+        {isChapterLeader && <TopQuestsWidget />}
       </div>
     </aside>
   );
 };
 
 export default RightSidebar;
+

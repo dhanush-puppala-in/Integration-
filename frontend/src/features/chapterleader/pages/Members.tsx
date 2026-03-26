@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { useToast } from "../../../context/ToastContext";
 import { useSelector } from "react-redux";
@@ -179,6 +180,7 @@ const Members: React.FC = () => {
   const { details } = useSelector((state: RootState) => state.chapterLeader);
   const [activeStageIdx, setActiveStageIdx] = useState(0);
   const [hoveredQuestId, setHoveredQuestId] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
   
   const [stages, setStages] = useState<Stage[]>([]); // Start with empty array for dynamic rendering
@@ -262,6 +264,21 @@ const Members: React.FC = () => {
     };
     fetchProgress();
   }, []);
+
+  // Deep-link: scroll to quest from sidebar widget
+  useEffect(() => {
+    const questId = searchParams.get("questId");
+    if (!questId || stages.length === 0) return;
+    setSearchParams({}, { replace: true });
+    setTimeout(() => {
+      const el = document.querySelector(`[data-quest-id="${questId}"]`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        setHoveredQuestId(questId);
+        setTimeout(() => setHoveredQuestId(null), 5000);
+      }
+    }, 400);
+  }, [stages, searchParams]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -365,6 +382,7 @@ const Members: React.FC = () => {
                 return (
                   <div
                     key={quest.id}
+                    data-quest-id={quest.id}
                     className={`relative mb-52 flex items-center justify-center w-full group ${hoveredQuestId === quest.id ? "z-[999]" : "z-10"}`}
                   >
                     {/* Curved Dotted Connecting Line (Gapless) */}
