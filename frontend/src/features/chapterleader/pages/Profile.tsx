@@ -12,6 +12,7 @@ import { GiCrystalCluster } from "react-icons/gi";
 
 import ProfileWidget from "../../../layout/rightsidebar/ProfileWidget";
 import DailyQuestWidget from "../../../layout/rightsidebar/DailyQuestWidget";
+import user from "../../../assets/image_copy.png"
 
 const Profile: React.FC = () => {
   return (
@@ -26,10 +27,7 @@ const Profile: React.FC = () => {
           <div className="flex-1 flex flex-col items-center gap-8 shrink-0">
             <div className="relative group">
               <div className="w-44 h-44 md:w-56 md:h-56 rounded-3xl overflow-hidden border-2 border-white/5 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)] bg-[#0c121d] p-1 transition-all duration-500 group-hover:border-blue-500/30 group-hover:shadow-[0_40px_80px_-16px_rgba(37,99,235,0.2)]">
-                <div className="w-full h-full rounded-[20px] overflow-hidden bg-slate-900/50 flex items-center justify-center relative">
-                  <FaUsers className="text-6xl text-blue-500/20" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-blue-600/5 to-transparent" />
-                </div>
+                <img src={user} alt="user" />
               </div>
               {/* Professional Tier Badge */}
               <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-[#0c121d] px-5 py-2.5 rounded-xl border border-blue-500/20 shadow-[0_20px_40px_rgba(0,0,0,0.5)] z-20">
@@ -55,7 +53,7 @@ const Profile: React.FC = () => {
           </div>
 
           {/* Section 2: Bio, Professional DNA & Core Metrics */}
-          <div className="flex-1 flex flex-col justify-between pt-2">
+          <div className="flex flex-col gap-15">
             <div className="flex flex-col items-center md:items-start text-center md:text-left">
               <div className="flex items-center gap-3 mb-3">
                 <span className="text-[10px] font-black text-blue-500 tracking-[0.3em] uppercase">
@@ -85,7 +83,7 @@ const Profile: React.FC = () => {
             </div>
 
             {/* Core Metrics Grid - Unified in Section 2 */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 pt-8 border-t border-white/5 w-full mt-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 border-t border-white/5 w-full">
               <div className="flex flex-col items-center md:items-start group cursor-default">
                 <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-3 group-hover:text-blue-500 transition-colors">
                   Portfolio
@@ -120,6 +118,8 @@ const Profile: React.FC = () => {
                 </div>
               </div>
             </div>
+
+
           </div>
 
           {/* Section 3: Analytical Intelligence (Integrated Widgets) */}

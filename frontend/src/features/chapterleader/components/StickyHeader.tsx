@@ -1,5 +1,6 @@
 import React from "react";
 import { IoIosRocket } from "react-icons/io";
+import user from "../../../assets/image_copy.png"
 
 interface StickyHeaderProps {
   currentStage: {
@@ -14,8 +15,8 @@ interface StickyHeaderProps {
 
 const StickyHeader: React.FC<StickyHeaderProps> = ({ currentStage, label }) => {
   return (
-    <div className="sticky top-[86px] md:top-0 z-[1000] w-full flex flex-col items-center pt-2 md:pt-6 px-4 pb-4 backdrop-blur-xl transition-all duration-700 border-b border-white/5 shadow-2xl">
-      <header className="flex flex-row items-center justify-between w-full lg:max-w-[1000px] p-4 px-6 md:px-10 bg-[#0c121d] border border-white/10 rounded-[2rem] shadow-2xl relative overflow-hidden group">
+    <div className="sticky top-[6px] lg:top-0 z-[1000] w-full flex flex-col items-center pt-2 md:pt-6 px-4 pb-4 transition-all duration-700  lg:ml-4">
+      <header className="flex flex-row items-center justify-between w-full lg:max-w-[1000px] p-3 md:px-10 bg-[#0c121d] border border-white/10 rounded-[1.5rem] shadow-2xl relative overflow-hidden group">
         {/* Left: Branding & Rocket Switcher */}
         <div className="flex items-center gap-4 relative z-10 transition-all duration-500">
           <div
@@ -45,7 +46,7 @@ const StickyHeader: React.FC<StickyHeaderProps> = ({ currentStage, label }) => {
         <div className="flex items-center gap-6 relative z-10">
           <div className="w-10 h-10 rounded-xl border border-white/10 overflow-hidden shadow-inner">
             <img
-              src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"
+              src={user}
               alt="User"
             />
           </div>

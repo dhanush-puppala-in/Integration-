@@ -26,12 +26,12 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
 
       <div className="flex flex-col gap-8">
         {/* Statistics - Only for Admin Role */}
-        {user?.role === ROLES.ADMIN && <StatisticWidget />}
+        {!isChapterLeader && <StatisticWidget />}
 
-        {/* Quests and View More - Only for Chapter Leader Role */}
+        {/* Quests and View More - Only for Chapter Leader Role
         {isChapterLeader && (
             <DailyQuestWidget />
-        )}
+        )} */}
       </div>
     </aside>
   );

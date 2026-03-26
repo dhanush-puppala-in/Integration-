@@ -478,13 +478,13 @@ const Club: React.FC = () => {
                                 </div>
                                 <div className="flex justify-between items-center text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-1">
                                   {quest.type === "continuous" ? (
-                                    <span>{quest.overallProgress}%</span>
+                                    <span>{Math.floor(quest.overallProgress || 0)}%</span>
                                   ) : (
                                     <>
                                       <span>
-                                        Progress: {quest.progress}/{quest.total}
+                                        Progress: {Math.floor(quest.progress)}/{Math.floor(quest.total)}
                                       </span>
-                                      <span>{quest.overallProgress}%</span>
+                                      <span>{Math.floor(quest.overallProgress || 0)}%</span>
                                     </>
                                   )}
                                 </div>

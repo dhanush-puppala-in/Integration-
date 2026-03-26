@@ -171,6 +171,7 @@ const DEFAULT_THEME = { stroke: "#22c55e", active: "#4ade80", bg: "rgba(34, 197,
 
 import { chapterLeaderApi } from "../../../api/chapterLeader";
 import GlobalLoader from "../../../components/GlobalLoader";
+import { Target } from "lucide-react";
 
 const Members: React.FC = () => {
   const { user, fetchChapterLeaderDetails } = useAuth();
@@ -188,6 +189,7 @@ const Members: React.FC = () => {
     try {
       setClaimingId(questId);
       const res = await chapterLeaderApi.claimQuestReward(questId, (details?._id || user?.id || (user as any)?._id) as string);
+      console.log(res);
       if (res.data?.success || res.status === 200 || res.status === 201) {
         setStages(prevStages => prevStages.map(stage => ({
           ...stage,
@@ -223,8 +225,8 @@ const Members: React.FC = () => {
                   let targetVal = 1;
 
                   if (type === "continuous") {
-                    currentVal = q.overallProgress || 0;
-                    targetVal = 100;
+                    currentVal = q.value || 0;
+                    targetVal = q.target ;
                   } else {
                     currentVal = q.value || 0;
                     targetVal = q.entityLimit || 1;
@@ -482,13 +484,19 @@ const Members: React.FC = () => {
                                 </div>
                                 <div className="flex justify-between items-center text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-1">
                                   {quest.type === "continuous" ? (
-                                    <span>{quest.overallProgress}%</span>
+                                    <>
+                                      <span>
+                                        Progress: {Math.floor(quest.progress)}/{Math.floor(quest.total)}
+                                        {/* value/target */}
+                                      </span>
+                                      <span>{Math.floor(quest.overallProgress || 0)}%</span>
+                                    </>
                                   ) : (
                                     <>
                                       <span>
-                                        Progress: {quest.progress}/{quest.total}
+                                        Progress: {Math.floor(quest.progress)}/{Math.floor(quest.total)}
                                       </span>
-                                      <span>{quest.overallProgress}%</span>
+                                      <span>{Math.floor(quest.overallProgress || 0)}%</span>
                                     </>
                                   )}
                                 </div>

@@ -294,7 +294,7 @@ const Events: React.FC = () => {
           <p className="max-w-md text-gray-400 text-lg font-medium italic">
             "No orbits have been discovered in this sector yet. Our cosmic scouts are currently mapping out new missions for your guild."
           </p>
-          <div className="mt-12 flex flex-col items-center gap-4">
+          <div className="mt-11 flex flex-col items-center gap-4">
             <div className="h-px w-24 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
             <span className="text-[10px] font-black tracking-[0.4em] text-gray-600 uppercase">
               Check back soon for new missions
@@ -472,13 +472,13 @@ const Events: React.FC = () => {
                                 </div>
                                 <div className="flex justify-between items-center text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-1">
                                   {quest.type === "continuous" ? (
-                                    <span>{quest.overallProgress}%</span>
+                                    <span>{Math.floor(quest.overallProgress || 0)}%</span>
                                   ) : (
                                     <>
                                       <span>
-                                        Progress: {quest.progress}/{quest.total}
+                                        Progress: {Math.floor(quest.progress)}/{Math.floor(quest.total)}
                                       </span>
-                                      <span>{quest.overallProgress}%</span>
+                                      <span>{Math.floor(quest.overallProgress || 0)}%</span>
                                     </>
                                   )}
                                 </div>

@@ -39,7 +39,7 @@ const CHAPTER_ITEMS: NavItemData[] = [
   { label: "Events", icon: Calendar, to: "/chapterleader/event" },
   { label: "Members", icon: Users, to: "/chapterleader/members" },
   { label: "Shops", icon: ShoppingBag, to: "/chapterleader/shop" },
-  { label: "Profile", icon: User, to: "/chapterleader/profile" },
+  // { label: "Profile", icon: User, to: "/chapterleader/profile" },
 ];
 
 const Navbar: React.FC = () => {
@@ -105,34 +105,6 @@ const Navbar: React.FC = () => {
               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-blue-500 rounded-r-full hidden md:block opacity-0 md:group-[.active]:opacity-100 transition-opacity duration-300" />
             </NavLink>
           ))}
-
-          {/* Others Category */}
-          {user?.role === ROLES.CHAPTER && (
-            <>
-              <div className="hidden lg:block md:my-4 mx-2"></div>
-              <NavLink
-                to="/chapterleader/others"
-                className={({ isActive }) => `
-                  flex flex-col lg:flex-row items-center gap-1 lg:gap-4 
-                  px-2 lg:px-5 py-2.5 lg:py-3.5 
-                  rounded-2xl 
-                  transition-all duration-300 relative
-                  flex-1 md:flex-none
-                  ${
-                    isActive
-                      ? "text-blue-500 bg-blue-600/10"
-                      : "text-gray-400 hover:text-white hover:bg-white/5"
-                  }
-                `}
-              >
-                <MoreHorizontal size={22} className="flex-shrink-0" />
-                <span className="text-[10px] lg:text-base font-bold tracking-tight hidden lg:block overflow-hidden whitespace-nowrap">
-                  Others
-                </span>
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-blue-500 rounded-r-full hidden md:block opacity-0 md:group-[.active]:opacity-100 transition-opacity duration-300" />
-              </NavLink>
-            </>
-          )}
         </nav>
       </div>
     </>
