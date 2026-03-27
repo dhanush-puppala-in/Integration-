@@ -70,7 +70,7 @@ const Navbar: React.FC = () => {
             M<span className="hidden lg:inline">acbease</span>
           </h1>
           <p className="hidden lg:block text-[10px] font-bold text-gray-500 tracking-[0.3em] mt-1 uppercase">
-            Cosmic Explorer
+            Chapter Leader
           </p>
         </div>
 

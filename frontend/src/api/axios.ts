@@ -38,8 +38,8 @@ axiosPrivate.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config;
-    // Condition to check if token is expired and this request was not previously retried
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Condition to check if token is expired (status 421) and this request was not previously retried
+    if (error.response?.status === 421 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
         const refreshToken = localStorage.getItem('refreshToken');
@@ -47,13 +47,13 @@ axiosPrivate.interceptors.response.use(
           throw new Error('No refresh token available');
         }
         
-        // Use standard axios instance so we don't trigger the interceptor again
-        const res = await axiosInstance.post('/chapterLeader/regenerateAccessToken', { // Adjust if backend URL differs slightly
+        // Use standard axios instance following common practices
+        const res = await axiosInstance.post('/chapterLeader/regenerateAccessToken', { 
           refreshToken: refreshToken,
         });
 
         const newAccessToken = res.data.accessToken;
-        // Optionally update refresh token if your backend sends it
+        // Update tokens in storage
         if (res.data.refreshToken) {
            localStorage.setItem('refreshToken', res.data.refreshToken);
         }
@@ -68,7 +68,7 @@ axiosPrivate.interceptors.response.use(
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
-        window.location.href = '/login'; // Or handle via history/navigation
+        window.location.href = '/login'; 
         return Promise.reject(refreshError);
       }
     }

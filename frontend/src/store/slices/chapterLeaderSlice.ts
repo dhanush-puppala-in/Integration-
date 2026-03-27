@@ -22,18 +22,17 @@ export interface ChapterLeaderDetails {
   __v?: number;
   approvedBy?: string;
   uid: string;
-  addresses: [
-    {
+  addresses: {
       _id: string;
-      name : string;
+      name: string;
       phone: string;
-      address: string;
+      addressLine1: string;
+      addressLine2?: string;
       city: string;
       state: string;
       zip: string;
-      country: string;
-    }
-  ];
+      country?: string;
+    }[];
 }
 
 interface ChapterLeaderState {
