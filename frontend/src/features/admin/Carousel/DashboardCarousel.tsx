@@ -121,7 +121,7 @@ const DashboardCarousel: React.FC<DashboardCarouselProps> = ({
 
   const handleClick = (id: string) => {
     pause();
-    navigate(`/metadata/${id}`);
+    navigate(`/admin/metadata/${id}`);
   };
 
   return (

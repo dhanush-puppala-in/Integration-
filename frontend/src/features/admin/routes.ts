@@ -6,6 +6,9 @@ const AdminContent = lazy(() => import('./pages/AdminContent'));
 const AdminBlog = lazy(() => import('./pages/AdminBlog'));
 const AdminNotification = lazy(() => import('./pages/AdminNotification'));
 const AdminStatistic = lazy(() => import('./pages/AdminStatistic'));
+const ClubsMeta = lazy(() => import('./pages/carousel_Pages/ClubsMeta'));
+const CommunityMeta = lazy(() => import('./pages/carousel_Pages/CommunityMeta'));
+const EventMeta = lazy(() => import('./pages/carousel_Pages/EventMeta'));
 
 export const adminRoutes = [
   { path: 'home', component: AdminHome },
@@ -14,4 +17,7 @@ export const adminRoutes = [
   { path: 'blog', component: AdminBlog },
   { path: 'notification', component: AdminNotification },
   { path: 'statistic', component: AdminStatistic },
+  { path: 'metadata/clubs', component: ClubsMeta },
+  { path: 'metadata/community', component: CommunityMeta },
+  { path: 'metadata/events', component: EventMeta },
 ];

@@ -1,43 +1,40 @@
 import { useEffect, useState } from "react";
 import StarfieldScene2D from "../../components/animation/StarfieldScene2D";
 import {
-    getTotalClubVisitsToday,
-    getTotalClubVisitsLastWeek,
-    getTotalClubVisitsLastMonth,
-    getTotalClubVisitsAllTime,
+    getTotalEventVisitsToday,
+    getTotalEventVisitsLastWeek,
+    getTotalEventVisitsLastMonth,
+    getTotalEventVisitsAllTime,
 
-    getAvgClubTimeToday,
-    getAvgClubTimeLastWeek,
-    getAvgClubTimeLastMonth,
-    getAvgClubTimeAllTime,
+    getAvgEventTimeToday,
+    getAvgEventTimeLastWeek,
+    getAvgEventTimeLastMonth,
+    getAvgEventTimeAllTime,
 
-    getBounceRateClubToday,
-    getBounceRateClubLastWeek,
-    getBounceRateClubLastMonth,
-    getBounceRateClubAllTime,
+    getBounceRateEventToday,
+    getBounceRateEventLastWeek,
+    getBounceRateEventLastMonth,
+    getBounceRateEventAllTime,
 
-    getSingleHitClubSessionsToday,
-    getSingleHitClubSessionsLastWeek,
-    getSingleHitClubSessionsLastMonth,
-    getSingleHitClubSessionsAllTime,
+    getSingleHitEventSessionsToday,
+    getSingleHitEventSessionsLastWeek,
+    getSingleHitEventSessionsLastMonth,
+    getSingleHitEventSessionsAllTime,
 
-    getAvgRequestsPerClubVisitToday,
-    getAvgRequestsPerClubVisitLastWeek,
-    getAvgRequestsPerClubVisitLastMonth,
-    getAvgRequestsPerClubVisitAllTime,
+    getAvgRequestsPerEventVisitToday,
+    getAvgRequestsPerEventVisitLastWeek,
+    getAvgRequestsPerEventVisitLastMonth,
+    getAvgRequestsPerEventVisitAllTime,
 
-    getClubVisitTimeClusters,
-    getPeakClubUsageHourly,
-    getTopNavigationFromClub,
+    getEventVisitTimeClusters,
+    getPeakEventUsageHourly,
+    getTopNavigationFromEvent,
 
-    getClubEngagementRate,
-    getClubStickinessRate,
-    getClubDeepNavigationRate,
-    getClubDiscoveryFromEventsRate,
-    getReturningClubUsers,
-    getMedianClubTime,
-    getTotalClubTimeAllTime
-} from "../../../../api/clubMeta";
+    getEventToClubConversionRate,
+    getReturningEventUsers,
+    getMedianEventTime,
+    getTotalEventTimeAllTime
+} from "../../../../api/EventMeta";
 
 import { Line, Doughnut } from "react-chartjs-2";
 import {
@@ -88,10 +85,6 @@ interface Insight {
     value: string | number;
 }
 
-/* -------------------------------------------------------------------------- */
-/*                             SUB-COMPONENTS                                 */
-/* -------------------------------------------------------------------------- */
-
 function Spinner() {
     return (
         <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin mx-auto" />
@@ -122,7 +115,7 @@ function MetricRow({ label, field, data, loading }: MetricRowProps): React.JSX.E
 /*                              MAIN COMPONENT                                */
 /* -------------------------------------------------------------------------- */
 
-const ClubsMeta: React.FC = () => {
+const EventMeta: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [summary, setSummary] = useState<SummaryState>({
         today: null,
@@ -136,18 +129,8 @@ const ClubsMeta: React.FC = () => {
     const [topNav, setTopNav] = useState<any[]>([]);
     const [insights, setInsights] = useState<Insight[]>([]);
 
-    // Rate data for charts if needed
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [engagementRateData, setEngagementRateData] = useState<any>(null);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [stickinessRateData, setStickinessRateData] = useState<any>(null);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [deepNavigationRateData, setDeepNavigationRateData] = useState<any>(null);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [discoveryRateData, setDiscoveryRateData] = useState<any>(null);
-
     useEffect(() => {
-        const loadClubMetadata = async () => {
+        const loadEventMetadata = async () => {
             try {
                 const [
                     visitsToday, visitsWeek, visitsMonth, visitsAll,
@@ -156,46 +139,41 @@ const ClubsMeta: React.FC = () => {
                     singleToday, singleWeek, singleMonth, singleAll,
                     avgReqToday, avgReqWeek, avgReqMonth, avgReqAll,
                     clustersRes, hourlyRes, topNavRes,
-                    engagementRes, stickinessRes, deepRes, discoveryRes,
-                    returningRes, medianRes, totalTimeRes
+                    conversionRes, returningRes, medianRes, totalTimeRes
                 ]: any[] = await Promise.all([
-                    getTotalClubVisitsToday(),
-                    getTotalClubVisitsLastWeek(),
-                    getTotalClubVisitsLastMonth(),
-                    getTotalClubVisitsAllTime(),
+                    getTotalEventVisitsToday(),
+                    getTotalEventVisitsLastWeek(),
+                    getTotalEventVisitsLastMonth(),
+                    getTotalEventVisitsAllTime(),
 
-                    getAvgClubTimeToday(),
-                    getAvgClubTimeLastWeek(),
-                    getAvgClubTimeLastMonth(),
-                    getAvgClubTimeAllTime(),
+                    getAvgEventTimeToday(),
+                    getAvgEventTimeLastWeek(),
+                    getAvgEventTimeLastMonth(),
+                    getAvgEventTimeAllTime(),
 
-                    getBounceRateClubToday(),
-                    getBounceRateClubLastWeek(),
-                    getBounceRateClubLastMonth(),
-                    getBounceRateClubAllTime(),
+                    getBounceRateEventToday(),
+                    getBounceRateEventLastWeek(),
+                    getBounceRateEventLastMonth(),
+                    getBounceRateEventAllTime(),
 
-                    getSingleHitClubSessionsToday(),
-                    getSingleHitClubSessionsLastWeek(),
-                    getSingleHitClubSessionsLastMonth(),
-                    getSingleHitClubSessionsAllTime(),
+                    getSingleHitEventSessionsToday(),
+                    getSingleHitEventSessionsLastWeek(),
+                    getSingleHitEventSessionsLastMonth(),
+                    getSingleHitEventSessionsAllTime(),
 
-                    getAvgRequestsPerClubVisitToday(),
-                    getAvgRequestsPerClubVisitLastWeek(),
-                    getAvgRequestsPerClubVisitLastMonth(),
-                    getAvgRequestsPerClubVisitAllTime(),
+                    getAvgRequestsPerEventVisitToday(),
+                    getAvgRequestsPerEventVisitLastWeek(),
+                    getAvgRequestsPerEventVisitLastMonth(),
+                    getAvgRequestsPerEventVisitAllTime(),
 
-                    getClubVisitTimeClusters(),
-                    getPeakClubUsageHourly(),
-                    getTopNavigationFromClub(),
+                    getEventVisitTimeClusters(),
+                    getPeakEventUsageHourly(),
+                    getTopNavigationFromEvent(),
 
-                    getClubEngagementRate(),
-                    getClubStickinessRate(),
-                    getClubDeepNavigationRate(),
-                    getClubDiscoveryFromEventsRate(),
-
-                    getReturningClubUsers(),
-                    getMedianClubTime(),
-                    getTotalClubTimeAllTime()
+                    getEventToClubConversionRate(),
+                    getReturningEventUsers(),
+                    getMedianEventTime(),
+                    getTotalEventTimeAllTime()
                 ]);
 
                 setSummary({
@@ -240,28 +218,20 @@ const ClubsMeta: React.FC = () => {
                 setTopNav(topNavRes.topNavigations);
 
                 setInsights([
-                    { label: "Club Engagement Rate", value: `${engagementRes.engagementRate}%` },
-                    { label: "Club Stickiness Rate", value: `${stickinessRes.stickinessRate}%` },
-                    { label: "Deep Navigation Rate", value: `${deepRes.deepNavigationRate}%` },
-                    { label: "Club Discovery from Events", value: `${discoveryRes.discoveryRate}%` },
-                    { label: "Returning Club Users", value: returningRes.returningUsers },
-                    { label: "Median Club Time (mins)", value: medianRes.medianTimeMinutes },
-                    { label: "Total Club Time (mins)", value: totalTimeRes.totalTimeMinutes }
+                    { label: "Event → Club Conversion", value: `${conversionRes.conversionRate}%` },
+                    { label: "Returning Event Users", value: returningRes.returningUsers },
+                    { label: "Median Event Time (mins)", value: medianRes.medianTimeMinutes },
+                    { label: "Total Event Time (mins)", value: totalTimeRes.totalTimeMinutes }
                 ]);
-
-                setEngagementRateData(engagementRes);
-                setStickinessRateData(stickinessRes);
-                setDeepNavigationRateData(deepRes);
-                setDiscoveryRateData(discoveryRes);
 
                 setLoading(false);
             } catch (err) {
-                console.error("ClubsMeta failed to load:", err);
+                console.error("EventMeta failed to load:", err);
                 setLoading(false);
             }
         };
 
-        loadClubMetadata();
+        loadEventMetadata();
     }, []);
 
     /* -------------------------------------------------------------------------- */
@@ -272,19 +242,19 @@ const ClubsMeta: React.FC = () => {
         labels: clusters ? Object.keys(clusters) : [],
         datasets: [{
             data: clusters ? Object.values(clusters) : [],
-            backgroundColor: ["#3B82F6", "#10B981", "#F59E0B"],
+            backgroundColor: ["#F472B6", "#A78BFA", "#34D399"],
             borderColor: "transparent",
             hoverOffset: 4
         }]
     };
 
     const lineData = {
-        labels: Object.keys(hourly),
+        labels: Object.keys(hourly).map(h => `${h}:00`),
         datasets: [{
-            label: "Hourly Hits",
+            label: "Event Traffic",
             data: Object.values(hourly),
-            borderColor: "#3B82F6",
-            backgroundColor: "rgba(59, 130, 246, 0.2)",
+            borderColor: "#F472B6",
+            backgroundColor: "rgba(244, 114, 182, 0.2)",
             tension: 0.4,
             fill: true
         }]
@@ -298,8 +268,8 @@ const ClubsMeta: React.FC = () => {
 
                 {/* 🌌 HEADER SECTION */}
                 <div className="text-center space-y-2">
-                    <h1 className="text-5xl font-black tracking-tight text-white/90">Club Metadata</h1>
-                    <p className="text-blue-400 font-bold uppercase tracking-[0.2em] text-xs">Cosmic Intelligence Dashboard</p>
+                    <h1 className="text-5xl font-black tracking-tight text-white/90">Event Metadata</h1>
+                    <p className="text-pink-400 font-bold uppercase tracking-[0.2em] text-xs">Cosmic Intelligence Hub</p>
                 </div>
 
                 {/* 📊 SUMMARY TABLE */}
@@ -338,8 +308,8 @@ const ClubsMeta: React.FC = () => {
                         className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8"
                     >
                         <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-                            <span className="w-2 h-2 bg-blue-500 rounded-full" />
-                            Club Visit Time Distribution
+                            <span className="w-2 h-2 bg-pink-500 rounded-full" />
+                            Event Visit Time Distribution
                         </h2>
                         <div className="h-64 flex items-center justify-center">
                             {loading ? <Spinner /> : <Doughnut data={doughnutData} options={{ maintainAspectRatio: false }} />}
@@ -352,8 +322,8 @@ const ClubsMeta: React.FC = () => {
                         className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8"
                     >
                         <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-                            <span className="w-2 h-2 bg-green-500 rounded-full" />
-                            Peak Club Usage (Hourly)
+                            <span className="w-2 h-2 bg-purple-500 rounded-full" />
+                            Peak Event Usage (Hourly)
                         </h2>
                         <div className="h-64 flex items-center justify-center">
                             {loading ? <Spinner /> : <Line data={lineData} options={{ maintainAspectRatio: false }} />}
@@ -368,7 +338,7 @@ const ClubsMeta: React.FC = () => {
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="lg:col-span-2 grid grid-cols-2 md:grid-cols-3 gap-4"
+                        className="lg:col-span-2 grid grid-cols-2 gap-4"
                     >
                         {insights.map((insight, idx) => (
                             <div key={idx} className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-2xl flex flex-col gap-1">
@@ -382,14 +352,14 @@ const ClubsMeta: React.FC = () => {
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="bg-blue-600/10 backdrop-blur-xl border border-blue-500/20 rounded-3xl p-8"
+                        className="bg-pink-600/10 backdrop-blur-xl border border-pink-500/20 rounded-3xl p-8"
                     >
-                        <h2 className="text-xl font-bold mb-6">Top Navigations</h2>
+                        <h2 className="text-xl font-bold mb-6">Top Navigations (from Event)</h2>
                         <div className="space-y-4">
                             {loading ? <Spinner /> : topNav.length > 0 ? topNav.map((nav, i) => (
                                 <div key={i} className="flex justify-between items-center group">
-                                    <span className="text-white/80 group-hover:text-white transition-colors">{nav.to}</span>
-                                    <span className="bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full text-xs font-bold">{nav.count} Hits</span>
+                                    <span className="text-white/80 group-hover:text-white transition-colors">{nav.page}</span>
+                                    <span className="bg-pink-500/20 text-pink-400 px-3 py-1 rounded-full text-xs font-bold">{nav.count} Hits</span>
                                 </div>
                             )) : <p className="text-gray-500">No data available</p>}
                         </div>
@@ -402,4 +372,4 @@ const ClubsMeta: React.FC = () => {
     );
 };
 
-export default ClubsMeta;
+export default EventMeta;
