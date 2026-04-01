@@ -9,6 +9,7 @@ const AdminStatistic = lazy(() => import('./pages/AdminStatistic'));
 const ClubsMeta = lazy(() => import('./pages/carousel_Pages/ClubsMeta'));
 const CommunityMeta = lazy(() => import('./pages/carousel_Pages/CommunityMeta'));
 const EventMeta = lazy(() => import('./pages/carousel_Pages/EventMeta'));
+const CrucialMeta = lazy(() => import('./pages/carousel_Pages/CrucialMeta'));
 
 export const adminRoutes = [
   { path: 'home', component: AdminHome },
@@ -20,4 +21,5 @@ export const adminRoutes = [
   { path: 'metadata/clubs', component: ClubsMeta },
   { path: 'metadata/community', component: CommunityMeta },
   { path: 'metadata/events', component: EventMeta },
+  { path: 'metadata/crucial', component: CrucialMeta },
 ];

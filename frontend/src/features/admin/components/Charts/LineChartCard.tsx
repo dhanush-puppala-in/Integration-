@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Line } from "react-chartjs-2";
 import {
   Chart,
@@ -11,6 +11,10 @@ import {
 import type { ChartData, ChartOptions } from "chart.js";
 
 import Button from "../../UI/Button";
+import { 
+  fetchHourlyTraffic, fetchWeeklyTraffic, fetchMonthlyTraffic,
+  fetchHourlySignups, fetchWeeklySignups, fetchMonthlySignups
+} from "./charts_api";
 
 Chart.register(LineElement, PointElement, CategoryScale, LinearScale, Tooltip);
 
@@ -23,53 +27,53 @@ interface LineChartCardProps {
   title: LineChartType;
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                STATIC DATA                                 */
-/* -------------------------------------------------------------------------- */
-
-const STATIC_TRAFFIC = {
-  Today: {
-    labels: ["00", "04", "08", "12", "16", "20"],
-    data: [120, 90, 200, 350, 280, 190]
-  },
-  "Last Week": {
-    labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-    data: [800, 900, 750, 1100, 1400, 1600, 1200]
-  },
-  "Last Month": {
-    labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
-    data: [3200, 4100, 3900, 5200]
-  }
-};
-
-const STATIC_SIGNUPS = {
-  Today: {
-    labels: ["00", "04", "08", "12", "16", "20"],
-    data: [15, 12, 25, 40, 32, 21]
-  },
-  "Last Week": {
-    labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-    data: [90, 120, 110, 150, 200, 180, 140]
-  },
-  "Last Month": {
-    labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
-    data: [400, 520, 480, 630]
-  }
-};
-
 const LineChartCard: React.FC<LineChartCardProps> = ({ title }) => {
   const [filter, setFilter] = useState<FilterType>("Today");
+  const [chartDataState, setChartDataState] = useState<{ labels: string[], data: number[] }>({ labels: [], data: [] });
+  const [loading, setLoading] = useState<boolean>(true);
 
-  const dataset = title === "Traffic"
-    ? STATIC_TRAFFIC[filter]
-    : STATIC_SIGNUPS[filter];
+  useEffect(() => {
+    let mounted = true;
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        let res: any;
+        if (title === "Traffic") {
+          if (filter === "Today") res = await fetchHourlyTraffic();
+          else if (filter === "Last Week") res = await fetchWeeklyTraffic();
+          else if (filter === "Last Month") res = await fetchMonthlyTraffic();
+        } else {
+          if (filter === "Today") res = await fetchHourlySignups();
+          else if (filter === "Last Week") res = await fetchWeeklySignups();
+          else if (filter === "Last Month") res = await fetchMonthlySignups();
+        }
+        
+        if (!mounted) return;
+        
+        // Backend returns `data` for traffic, and `counts` for signups
+        const dataArr = res.data ? res.data : (res.counts ? res.counts : []);
+        setChartDataState({ labels: res.labels || [], data: dataArr });
+      } catch (err) {
+        console.error("Error loading line chart data:", err);
+        if (mounted) setChartDataState({ labels: [], data: [] });
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    
+    loadData();
+    
+    return () => {
+      mounted = false;
+    };
+  }, [filter, title]);
 
   const chartData: ChartData<"line"> = {
-    labels: dataset.labels,
+    labels: chartDataState.labels,
     datasets: [
       {
         label: title,
-        data: dataset.data,
+        data: chartDataState.data,
         tension: 0.4,
         borderWidth: 3,
         borderColor: title === "Traffic" ? "#C084FC" : "#4ADE80",
@@ -120,7 +124,15 @@ const LineChartCard: React.FC<LineChartCardProps> = ({ title }) => {
       </div>
 
       {/* LINE CHART */}
-      <Line data={chartData} options={options} />
+      <div className="relative min-h-[250px] w-full flex justify-center items-center">
+        {loading ? (
+             <div className="w-8 h-8 rounded-full border-2 border-white/20 border-t-white animate-spin"></div>
+        ) : (
+            <div className="w-full h-full">
+              <Line data={chartData} options={options} />
+            </div>
+        )}
+      </div>
     </div>
   );
 };

@@ -1,7 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Doughnut } from "react-chartjs-2";
 import { Chart, ArcElement, Tooltip } from "chart.js";
 import Button from "../../UI/Button";
+import {
+  todaySessionDonut, lastWeekSessionDonut, lastMonthSessionDonut,
+  todaySessionsByTimeOfDayDonut, lastWeekSessionsByTimeOfDayDonut, lastMonthSessionsByTimeOfDayDonut
+} from "./charts_api";
 
 Chart.register(ArcElement, Tooltip);
 
@@ -15,27 +19,58 @@ interface DoughnutCardProps {
   type: DonutType;
 }
 
-/* -------------------------------------------------------------------------- */
-/*                               STATIC DATA                                  */
-/* -------------------------------------------------------------------------- */
-
-const STATIC_DATA = {
-  SESSION_DURATION: {
-    Today: [20, 35, 15, 10],
-    "Last Week": [120, 90, 70, 40],
-    "Last Month": [300, 240, 180, 120],
-  },
-  TIME_OF_DAY: {
-    Today: [30, 40, 20, 10],
-    "Last Week": [140, 160, 100, 60],
-    "Last Month": [420, 380, 260, 200],
-  },
-};
-
 const DoughnutCard: React.FC<DoughnutCardProps> = ({ title, type }) => {
   const [filter, setFilter] = useState<FilterType>("Today");
+  const [chartDataState, setChartDataState] = useState<number[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  const values = STATIC_DATA[type][filter];
+  useEffect(() => {
+    let mounted = true;
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        let res: any;
+        if (type === "SESSION_DURATION") {
+          if (filter === "Today") res = await todaySessionDonut();
+          else if (filter === "Last Week") res = await lastWeekSessionDonut();
+          else if (filter === "Last Month") res = await lastMonthSessionDonut();
+
+          if (mounted && res) {
+            setChartDataState([
+              res.lte_1_min || 0,
+              res.between_1_and_2_5_min || 0,
+              res.between_2_5_and_5_min || 0,
+              res.gt_5_min || 0
+            ]);
+          }
+        } else {
+          if (filter === "Today") res = await todaySessionsByTimeOfDayDonut();
+          else if (filter === "Last Week") res = await lastWeekSessionsByTimeOfDayDonut();
+          else if (filter === "Last Month") res = await lastMonthSessionsByTimeOfDayDonut();
+
+          if (mounted && res) {
+            setChartDataState([
+              res.morning || 0,
+              res.afternoon || 0,
+              res.evening || 0,
+              res.night || 0
+            ]);
+          }
+        }
+      } catch (err) {
+        console.error("Error loading doughnut data:", err);
+        if (mounted) setChartDataState([]);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    loadData();
+
+    return () => {
+      mounted = false;
+    };
+  }, [filter, type]);
 
   /* -------------------------------------------------------------------------- */
   /*                              CHART CONFIG                                  */
@@ -44,29 +79,29 @@ const DoughnutCard: React.FC<DoughnutCardProps> = ({ title, type }) => {
   const chartConfig =
     type === "TIME_OF_DAY"
       ? {
-          labels: ["Morning", "Afternoon", "Evening", "Night"],
-          colors: [
-            "rgba(255, 206, 86, 0.9)",
-            "rgba(54, 162, 235, 0.9)",
-            "rgba(255, 99, 132, 0.9)",
-            "rgba(75, 192, 192, 0.9)",
-          ],
-        }
+        labels: ["Morning", "Afternoon", "Evening", "Night"],
+        colors: [
+          "rgba(255, 206, 86, 0.9)",
+          "rgba(54, 162, 235, 0.9)",
+          "rgba(255, 99, 132, 0.9)",
+          "rgba(75, 192, 192, 0.9)",
+        ],
+      }
       : {
-          labels: ["≤ 1 min", "1–2.5 min", "2.5–5 min", "> 5 min"],
-          colors: [
-            "rgba(255, 99, 132, 0.9)",
-            "rgba(54, 162, 235, 0.9)",
-            "rgba(255, 206, 86, 0.9)",
-            "rgba(75, 192, 192, 0.9)",
-          ],
-        };
+        labels: ["≤ 1 min", "1–2.5 min", "2.5–5 min", "> 5 min"],
+        colors: [
+          "rgba(255, 99, 132, 0.9)",
+          "rgba(54, 162, 235, 0.9)",
+          "rgba(255, 206, 86, 0.9)",
+          "rgba(75, 192, 192, 0.9)",
+        ],
+      };
 
   const data = {
     labels: chartConfig.labels,
     datasets: [
       {
-        data: values,
+        data: chartDataState,
         backgroundColor: chartConfig.colors,
         borderWidth: 2,
         borderColor: "#ffffff",
@@ -106,13 +141,19 @@ const DoughnutCard: React.FC<DoughnutCardProps> = ({ title, type }) => {
 
       {/* DONUT */}
       <div className="flex justify-center items-center h-64 w-full relative">
-        <Doughnut
-          data={data}
-          options={{
-            maintainAspectRatio: false,
-            responsive: true,
-          }}
-        />
+        {loading ? (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full border-2 border-white/20 border-t-white animate-spin"></div>
+          </div>
+        ) : (
+          <Doughnut
+            data={data}
+            options={{
+              maintainAspectRatio: false,
+              responsive: true,
+            }}
+          />
+        )}
       </div>
     </div>
   );

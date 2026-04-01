@@ -18,34 +18,72 @@ import {
 } from "./sidebar_api";
 
 export default function Sidebar(): React.JSX.Element {
-  const [totalUsers, setTotalUsers] = useState<number>(1200);
-  const [todayUsers, setTodayUsers] = useState<number>(85);
-  const [todaySessions, setTodaySessions] = useState<number>(340);
-  const [avgSessionTime, setAvgSessionTime] = useState<number>(7);
-  const [liveEvents, setLiveEvents] = useState<number>(14);
+  const [totalUsers, setTotalUsers] = useState<number>(0);
+  const [todayUsers, setTodayUsers] = useState<number>(0);
+  const [todaySessions, setTodaySessions] = useState<number>(0);
+  const [avgSessionTime, setAvgSessionTime] = useState<number>(0);
+  const [liveEvents, setLiveEvents] = useState<number>(0);
 
   useEffect(() => {
-    fetchTotalUsers()
-      .then((data: any) => setTotalUsers(data?.users ?? 1200))
-      .catch(() => setTotalUsers(1200));
+    let mounted = true;
 
-    fetchTodayUsers()
-      .then((data: any) => setTodayUsers(data?.users ?? 85))
-      .catch(() => setTodayUsers(85));
+    const loadSidebarData = async () => {
+      try {
+        const [
+          totalUsersRes,
+          todayUsersRes,
+          todaySessionsRes,
+          avgSessionTimeRes,
+          liveEventsRes,
+        ] = await Promise.allSettled([
+          fetchTotalUsers(),
+          fetchTodayUsers(),
+          fetchTodaySessions(),
+          fetchAverageSessionTime(),
+          fetchLiveEvents(),
+        ]);
 
-    fetchTodaySessions()
-      .then((data: any) => setTodaySessions(data?.count ?? 340))
-      .catch(() => setTodaySessions(340));
+        if (!mounted) return;
 
-    fetchAverageSessionTime()
-      .then((data: any) =>
-        setAvgSessionTime(Number(data?.avgSessionTimeMinutes ?? 7))
-      )
-      .catch(() => setAvgSessionTime(7));
+        if (totalUsersRes.status === "fulfilled") {
+          setTotalUsers(totalUsersRes.value?.users ?? 0);
+        } else {
+          setTotalUsers(0);
+        }
 
-    fetchLiveEvents()
-      .then((data: any) => setLiveEvents(data?.count ?? 14))
-      .catch(() => setLiveEvents(14));
+        if (todayUsersRes.status === "fulfilled") {
+          setTodayUsers(todayUsersRes.value?.users ?? 0);
+        } else {
+          setTodayUsers(0);
+        }
+
+        if (todaySessionsRes.status === "fulfilled") {
+          setTodaySessions(todaySessionsRes.value?.count ?? 0);
+        } else {
+          setTodaySessions(0);
+        }
+
+        if (avgSessionTimeRes.status === "fulfilled") {
+          setAvgSessionTime(Number(avgSessionTimeRes.value?.avgSessionTimeMinutes ?? 0));
+        } else {
+          setAvgSessionTime(0);
+        }
+
+        if (liveEventsRes.status === "fulfilled") {
+          setLiveEvents(liveEventsRes.value?.count ?? 0);
+        } else {
+          setLiveEvents(0);
+        }
+      } catch (error) {
+        console.error("Error loading sidebar data", error);
+      }
+    };
+
+    loadSidebarData();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   return (
@@ -76,6 +114,7 @@ export default function Sidebar(): React.JSX.Element {
         singleLabel="Active Events"
       />
 
+      {/* Notifications and Emails remain mocked as before since there is no backend route for them yet */}
       <MetricCard
         icon={FaBell}
         leftValue={32}
