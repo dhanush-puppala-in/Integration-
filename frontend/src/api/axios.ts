@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const BASE_URL = 'http://172.20.10.3:5050/universe/api/v1';
-
+// const BASE_URL = 'http://localhost:5050/universe/api/v1';
 export const axiosInstance = axios.create({
   baseURL: BASE_URL,
   headers: {
@@ -46,7 +46,7 @@ axiosPrivate.interceptors.response.use(
         if (!refreshToken) {
           throw new Error('No refresh token available');
         }
-        
+
         // Use standard axios instance so we don't trigger the interceptor again
         const res = await axiosInstance.post('/chapterLeader/regenerateAccessToken', { // Adjust if backend URL differs slightly
           refreshToken: refreshToken,
@@ -55,7 +55,7 @@ axiosPrivate.interceptors.response.use(
         const newAccessToken = res.data.accessToken;
         // Optionally update refresh token if your backend sends it
         if (res.data.refreshToken) {
-           localStorage.setItem('refreshToken', res.data.refreshToken);
+          localStorage.setItem('refreshToken', res.data.refreshToken);
         }
 
         localStorage.setItem('accessToken', newAccessToken);
